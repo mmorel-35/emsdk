@@ -33,3 +33,6 @@ __pycache__
 /mingw
 /spidermonkey
 /binaryen
+
+# Bazel
+MODULE.bazel.lock

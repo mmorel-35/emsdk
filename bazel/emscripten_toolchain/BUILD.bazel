@@ -6,8 +6,8 @@ filegroup(
     name = "common_files",
     srcs = [
         "emscripten_config",
-        "env.sh",
         "env.bat",
+        "env.sh",
         "@nodejs//:node_files",
     ],
 )
@@ -15,31 +15,31 @@ filegroup(
 filegroup(
     name = "compiler_files",
     srcs = [
-        "emcc.sh",
         "emcc.bat",
-        "@emsdk//:compiler_files",
+        "emcc.sh",
         ":common_files",
+        "@emsdk//:compiler_files",
     ],
 )
 
 filegroup(
     name = "linker_files",
     srcs = [
-        "emcc_link.sh",
         "emcc_link.bat",
+        "emcc_link.sh",
         "link_wrapper.py",
-        "@emsdk//:linker_files",
         ":common_files",
+        "@emsdk//:linker_files",
     ],
 )
 
 filegroup(
     name = "ar_files",
     srcs = [
-        "emar.sh",
         "emar.bat",
-        "@emsdk//:ar_files",
+        "emar.sh",
         ":common_files",
+        "@emsdk//:ar_files",
     ],
 )
 
