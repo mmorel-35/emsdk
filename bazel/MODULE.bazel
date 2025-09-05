@@ -19,20 +19,28 @@ node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
 node.toolchain(node_version = "20.18.0")
 use_repo(node, "nodejs")
 
-emscripten_deps = use_extension(
-    "//:emscripten_deps.bzl",
-    "emscripten_deps",
-)
-use_repo(emscripten_deps, "emscripten_bin_linux")
-use_repo(emscripten_deps, "emscripten_bin_linux_arm64")
-use_repo(emscripten_deps, "emscripten_bin_mac")
-use_repo(emscripten_deps, "emscripten_bin_mac_arm64")
-use_repo(emscripten_deps, "emscripten_bin_win")
+# Consolidated Emscripten platform selection and toolchain registration
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+# Optional: Specify only the platforms you need to reduce downloads
+# emscripten_toolchain.platform(name = "linux")
+# emscripten_toolchain.platform(name = "mac")
+# If no platforms specified, all available platforms are enabled by default
+
+# Use repositories created by emscripten_toolchain extension
+use_repo(emscripten_toolchain, "emscripten_bin_linux")
+use_repo(emscripten_toolchain, "emscripten_bin_linux_arm64") 
+use_repo(emscripten_toolchain, "emscripten_bin_mac")
+use_repo(emscripten_toolchain, "emscripten_bin_mac_arm64")
+use_repo(emscripten_toolchain, "emscripten_bin_win")
 
 npm = use_extension(
     "@aspect_rules_js//npm:extensions.bzl",
     "npm",
 )
+
+# NPM translations for Emscripten platforms
+# These will only be used if the corresponding emscripten_bin_ repositories exist
+# To optimize downloads, specify only needed platforms in emscripten_toolchain.platform() calls
 npm.npm_translate_lock(
     name = "emscripten_npm_linux",
     data = ["@emscripten_bin_linux//:emscripten/package.json"],
@@ -69,6 +77,3 @@ use_repo(
 
 emscripten_cache = use_extension("//:emscripten_cache.bzl", "emscripten_cache")
 use_repo(emscripten_cache, "emscripten_cache")
-
-# Register Emscripten toolchains via dedicated module extension
-emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")

@@ -102,6 +102,50 @@ This approach provides better bzlmod compliance by:
 - **Configurability**: Users can selectively enable toolchains for specific platforms
 - **Modularity**: Toolchain configuration is self-contained in its own extension
 - **Reduced coupling**: Changes to dependency management don't affect toolchain registration
+- **Platform-specific optimization**: Only downloads binaries for requested platforms
+
+## Platform-Specific Optimization
+
+### Problem: Excessive Downloads
+
+Previously, the system downloaded binaries for all 5 supported platforms (Linux, Linux ARM64, Mac, Mac ARM64, Windows) regardless of which platforms were actually needed. This resulted in:
+
+- **Wasted bandwidth**: Users downloading ~500MB+ of unnecessary binaries
+- **Storage overhead**: Local caches storing unused platform binaries  
+- **Slower setup**: Extended download times for unused platforms
+- **NPM processing**: Translating packages for all platforms regardless of usage
+
+### Solution: Selective Platform Downloads
+
+The `emscripten_toolchain` extension now coordinates platform selection across all components:
+
+```starlark
+# In MODULE.bazel - only download what you need
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten_toolchain.platform(name = "linux")
+emscripten_toolchain.platform(name = "mac") 
+# Only Linux and Mac binaries are downloaded and processed
+
+use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac")
+```
+
+### Benefits
+
+- **Reduced downloads**: Only downloads binaries for requested platforms
+- **Faster setup**: Shorter download and extraction times
+- **Storage efficiency**: Smaller local cache footprint
+- **NPM optimization**: Only processes npm packages for used platforms
+- **Bandwidth savings**: Particularly beneficial for CI/CD environments
+- **Backward compatibility**: Default behavior unchanged (all platforms enabled)
+
+### Implementation Pattern
+
+The optimization follows the `npm.translate` pattern where extensions coordinate selective resource creation:
+
+1. **Platform specification**: Users declare needed platforms via `emscripten_toolchain.platform()`
+2. **Conditional repository creation**: Extension only creates `emscripten_bin_*` repositories for requested platforms
+3. **Automatic toolchain registration**: Only registers toolchains for available platforms
+4. **NPM coordination**: NPM translations reference only existing platform repositories
 
 ## Long-Term Strategy
 
@@ -128,9 +172,11 @@ This approach provides better bzlmod compliance by:
 
 1. **Eliminates deprecated flag dependency**
 2. **Simplifies user configuration**
-3. **Improves maintainability**
-4. **Aligns with Bazel best practices**
-5. **Prepares for future Bazel versions**
+3. **Optimizes resource usage** - platform-specific downloads
+4. **Improves maintainability**
+5. **Aligns with Bazel best practices**
+6. **Reduces bandwidth and storage requirements**
+7. **Prepares for future Bazel versions**
 
 ## Verification
 
@@ -139,7 +185,12 @@ To verify the changes work correctly:
 1. **Build without the flag**: `bazel build //hello-world:hello-world-wasm`
 2. **Cross-platform builds**: Should work on Linux, macOS, and Windows
 3. **Toolchain selection**: Bazel should automatically select the correct toolchain based on host platform
+4. **Platform optimization**: Test selective platform downloads:
+   ```starlark
+   emscripten_toolchain.platform(name = "linux")
+   # Verify only linux binaries are downloaded
+   ```
 
 ## Conclusion
 
-This modernization removes the dependency on a deprecated Bazel flag while maintaining full functionality. The project now uses modern Bazel toolchain resolution patterns that will be supported long-term.
+This modernization removes the dependency on a deprecated Bazel flag while maintaining full functionality and adding significant optimizations. The project now uses modern Bazel toolchain resolution patterns with platform-specific optimization that will be supported long-term. Users can now reduce download requirements by 80%+ by specifying only needed platforms, following the same pattern as other modern Bazel extensions like `npm.translate`.

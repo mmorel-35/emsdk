@@ -16,14 +16,32 @@ git_override(
 )
 ```
 
-You can use a different version of this SDK by changing it in your `MODULE.bazel` file. The Emscripten version is by default the same as the SDK version, but you can use a different one as well by adding to your `MODULE.bazel`:
+## Platform-Specific Optimization
 
+By default, the Emscripten toolchain downloads binaries for all supported platforms (Linux, Linux ARM64, Mac, Mac ARM64, Windows). To reduce bandwidth and storage usage, you can specify only the platforms you need:
+
+```starlark
+# Configure toolchains and specify only needed platforms
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten_toolchain.platform(name = "linux")
+emscripten_toolchain.platform(name = "mac")
+# Only Linux and Mac binaries will be downloaded
+
+# Use the selected repositories
+use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac")
 ```
-emscripten_deps = use_extension(
-    "@emsdk//:emscripten_deps.bzl",
-    "emscripten_deps",
-)
-emscripten_deps.config(version = "4.0.1")
+
+If you don't specify any platforms, all available platforms are enabled by default for backward compatibility.
+
+## Version Configuration
+
+You can use a different version of this SDK by changing it in your `MODULE.bazel` file. The Emscripten version is by default the same as the SDK version, but you can use a different one as well:
+
+```starlark
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten_toolchain.config(version = "4.0.1")
+# Optionally specify platforms to optimize downloads
+emscripten_toolchain.platform(name = "linux")
 ```
 
 ## Building
