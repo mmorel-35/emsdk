@@ -19,34 +19,32 @@ node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
 node.toolchain(node_version = "20.18.0")
 use_repo(node, "nodejs")
 
-# Consolidated Emscripten platform selection and toolchain registration
+# Simplified Emscripten toolchain setup with auto-detection
+# The extension auto-detects the host platform and downloads only necessary binaries
 emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
 
-# Platform-specific configuration (recommended approach using Bazel platform constraints):
-# emscripten_toolchain.platform(constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"])
+# Optional: Specify additional platforms beyond the auto-detected host platform
+# Modern approach using Bazel platform constraints (recommended):
 # emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+# emscripten_toolchain.platform(constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"])
 
-# Legacy platform specification (for backward compatibility):
-# emscripten_toolchain.platform(name = "linux")
-# emscripten_toolchain.platform(name = "mac")
+# Legacy approach using custom platform names (backward compatible):
+# emscripten_toolchain.platform(name = "mac_arm64")
+# emscripten_toolchain.platform(name = "win")
 
-# If no platforms specified, all available platforms are enabled by default
+# Optional: Specify Emscripten version (defaults to "latest")
+# emscripten_toolchain.config(version = "3.1.51")
 
-# Use repositories created by emscripten_toolchain extension
-use_repo(emscripten_toolchain, "emscripten_bin_linux")
-use_repo(emscripten_toolchain, "emscripten_bin_linux_arm64") 
-use_repo(emscripten_toolchain, "emscripten_bin_mac")
-use_repo(emscripten_toolchain, "emscripten_bin_mac_arm64")
-use_repo(emscripten_toolchain, "emscripten_bin_win")
+# All created emscripten_bin_* repositories are automatically exposed by the extension
 
 npm = use_extension(
     "@aspect_rules_js//npm:extensions.bzl",
     "npm",
 )
 
-# NPM translations for Emscripten platforms
-# These will only be used if the corresponding emscripten_bin_ repositories exist
-# To optimize downloads, specify only needed platforms in emscripten_toolchain.platform() calls
+# NPM translations for enabled Emscripten platforms only
+# The emscripten_toolchain extension automatically creates only the needed repositories,
+# so these translations will only occur for platforms that are actually enabled
 npm.npm_translate_lock(
     name = "emscripten_npm_linux",
     data = ["@emscripten_bin_linux//:emscripten/package.json"],

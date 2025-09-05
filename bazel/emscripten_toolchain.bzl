@@ -46,13 +46,13 @@ def _constraint_to_platform_name(constraints):
 def _emscripten_toolchain_impl(ctx):
     """Implementation of the emscripten_toolchain module extension.
     
-    This extension coordinates platform selection across:
-    1. Emscripten binary downloads (emscripten_bin_* repositories)
-    2. NPM dependency processing (emscripten_npm_* repositories) 
-    3. Toolchain registration
+    This extension provides a simplified interface for Emscripten toolchain setup:
+    1. Auto-detects host platform and downloads only necessary binaries
+    2. Automatically handles NPM dependencies for enabled platforms
+    3. Registers toolchains without manual configuration
+    4. Exposes all created repositories automatically
     
-    Only downloads and processes platforms that are explicitly requested,
-    reducing bandwidth and storage requirements.
+    Users only need minimal configuration with optional additional platforms.
     """
     
     # Collect version configuration
@@ -70,8 +70,28 @@ def _emscripten_toolchain_impl(ctx):
 
     revision = EMSCRIPTEN_TAGS[version]
     
-    # Collect all platform configurations from modules
-    enabled_platforms = []
+    # Auto-detect host platform for minimal configuration
+    host_platform = None
+    if ctx.os.name.startswith("linux"):
+        if ctx.os.arch == "aarch64" or ctx.os.arch == "arm64":
+            host_platform = "linux_arm64"
+        else:
+            host_platform = "linux"
+    elif ctx.os.name.startswith("mac"):
+        if ctx.os.arch == "aarch64" or ctx.os.arch == "arm64":
+            host_platform = "mac_arm64"
+        else:
+            host_platform = "mac"
+    elif ctx.os.name.startswith("windows"):
+        host_platform = "win"
+    else:
+        # Fallback to linux for unknown platforms
+        host_platform = "linux"
+    
+    # Start with host platform enabled by default
+    enabled_platforms = [host_platform]
+    
+    # Collect additional platform configurations from modules
     for mod in ctx.modules:
         for config in mod.tags.platform:
             if hasattr(config, 'constraints') and config.constraints:
@@ -84,15 +104,12 @@ def _emscripten_toolchain_impl(ctx):
                 if config.name not in enabled_platforms:
                     enabled_platforms.append(config.name)
     
-    # If no platforms specified, enable all available platforms (backward compatibility)
-    if not enabled_platforms:
-        enabled_platforms = ["linux", "linux_arm64", "mac", "mac_arm64", "win"]
-    
     # Create emscripten_bin repositories only for enabled platforms
     emscripten_url = "https://storage.googleapis.com/webassembly/emscripten-releases-builds/{}/{}/wasm-binaries{}.{}"
     
-    # Repository names that will be created
+    # Repository names that will be created and exposed
     repo_names = []
+    npm_repo_names = []
     
     for platform in enabled_platforms:
         repo_name = emscripten_repo_name(platform)
@@ -183,4 +200,6 @@ emscripten_toolchain = module_extension(
         ),
     },
     implementation = _emscripten_toolchain_impl,
+    os_dependent = True,
+    arch_dependent = True,
 )

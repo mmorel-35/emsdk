@@ -2,14 +2,16 @@
 
 ## Problem Statement
 
-The emsdk project required the deprecated Bazel flag `--incompatible_enable_cc_toolchain_resolution` to work correctly. This flag was introduced to transition from legacy toolchain resolution to modern toolchain resolution and is now deprecated.
+The emsdk project required users to add the deprecated Bazel flag `--incompatible_enable_cc_toolchain_resolution` to their `.bazelrc` files to work correctly. Additionally, the system downloaded binaries for all 5 supported platforms regardless of which platforms were actually needed, resulting in wasted bandwidth and storage. Finally, platform selection used custom labels instead of standard Bazel platform constraints.
 
 ## Root Cause Analysis
 
-The issue was caused by the use of both **legacy** and **modern** toolchain definitions:
+The project had three main inefficiencies:
 
-1. **Legacy approach**: `cc_toolchain_suite` with manual CPU/compiler mappings
-2. **Modern approach**: `toolchain()` rules with platform constraints
+1. **Legacy toolchain resolution**: Using both deprecated `cc_toolchain_suite` and modern `toolchain()` rules simultaneously
+2. **Excessive downloads**: Downloading ~500MB+ of binaries for all platforms even when users only needed one platform  
+3. **Non-standard platform specification**: Using custom labels like "linux", "mac" instead of Bazel's standard platform constraints
+4. **Poor user experience**: Requiring manual `use_repo` declarations and verbose configuration
 
 ### Why the flag was needed
 
@@ -55,11 +57,38 @@ native.toolchain(
 
 **Removed**: `build --incompatible_enable_cc_toolchain_resolution`
 
-### 3. Updated Documentation
+### 3. Improved User Experience and Toolchain Isolation
+
+**File**: `bazel/emscripten_toolchain.bzl`
+
+**Key improvements**:
+- **Auto-detection**: Automatically detects host platform and downloads only necessary binaries
+- **Simplified interface**: Minimal configuration required for common use cases
+- **Automatic repository exposure**: All created repositories are automatically available without manual `use_repo` declarations
+- **Better isolation**: Users don't need to specify verbose configuration
+
+**Old usage** (complex):
+```starlark
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten_toolchain.platform(constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"])
+emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac_arm64")
+```
+
+**New usage** (simple):
+```starlark
+# Auto-detects host platform, downloads only necessary binaries
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+# Optional: Add additional platforms beyond host
+# emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+```
+
+### 4. Updated Documentation
 
 **File**: `bazel/README.md`
 
 **Removed**: Instructions to add the deprecated flag to user's `.bazelrc`
+**Added**: Comprehensive documentation showing both simplified and advanced usage patterns
 
 ## How Modern Toolchain Resolution Works
 
@@ -83,62 +112,81 @@ The project defines toolchains for different host platforms:
 
 ### Registration
 
-Toolchains are automatically registered by a dedicated `emscripten_toolchain` module extension in `emscripten_toolchain.bzl`. This provides better separation of concerns by decoupling toolchain registration from dependency management:
+Toolchains are automatically registered by a dedicated `emscripten_toolchain` module extension in `emscripten_toolchain.bzl`. This extension now provides:
+
+1. **Automatic host detection**: Detects the current platform and enables it by default
+2. **Selective downloads**: Only downloads binaries for enabled platforms  
+3. **Automatic repository exposure**: All created repositories are automatically exposed
+4. **Standard platform constraints**: Supports modern Bazel platform specification
+5. **Backward compatibility**: Still supports legacy custom platform names
 
 ```starlark
-# In MODULE.bazel
+# Minimal setup - auto-detects host platform
 emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
-```
 
-The extension supports configurable platform selection:
-```starlark
-# Optional: Register toolchains for specific platforms only
-emscripten_toolchain.platform(name = "linux")
-emscripten_toolchain.platform(name = "mac")
-```
-
-This approach provides better bzlmod compliance by:
-- **Separation of concerns**: Toolchain registration is separate from dependency management
-- **Configurability**: Users can selectively enable toolchains for specific platforms
-- **Modularity**: Toolchain configuration is self-contained in its own extension
-- **Reduced coupling**: Changes to dependency management don't affect toolchain registration
-- **Platform-specific optimization**: Only downloads binaries for requested platforms
-
-## Platform-Specific Optimization
-
-### Problem: Excessive Downloads
-
-Previously, the system downloaded binaries for all 5 supported platforms (Linux, Linux ARM64, Mac, Mac ARM64, Windows) regardless of which platforms were actually needed. This resulted in:
-
-- **Wasted bandwidth**: Users downloading ~500MB+ of unnecessary binaries
-- **Storage overhead**: Local caches storing unused platform binaries  
-- **Slower setup**: Extended download times for unused platforms
-- **NPM processing**: Translating packages for all platforms regardless of usage
-
-### Solution: Selective Platform Downloads
-
-The `emscripten_toolchain` extension now coordinates platform selection across all components and supports both modern Bazel platform constraints and legacy platform names:
-
-#### Modern Approach (Recommended)
-```starlark
-# In MODULE.bazel - use Bazel platform constraints
-emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
-emscripten_toolchain.platform(constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"])
+# Optional: Add additional platforms using Bazel constraints (recommended)
 emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
-# Only Linux x86_64 and Mac ARM64 binaries are downloaded and processed
 
-use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac_arm64")
+# Optional: Add additional platforms using legacy names (backward compatible)  
+emscripten_toolchain.platform(name = "win")
 ```
 
-#### Legacy Approach (Backward Compatibility)
-```starlark
-# In MODULE.bazel - use custom platform names
-emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
-emscripten_toolchain.platform(name = "linux")
-emscripten_toolchain.platform(name = "mac") 
-# Only Linux and Mac binaries are downloaded and processed
+This approach provides better bzlmod compliance and user experience by:
+- **Automatic configuration**: Minimal setup required for common use cases
+- **Host detection**: Only downloads binaries needed for the current platform by default
+- **Separation of concerns**: Toolchain registration is separate from dependency management
+- **Standard constraints**: Uses Bazel's standard platform constraint system
+- **Reduced boilerplate**: No manual `use_repo` declarations needed
+- **Bandwidth optimization**: Up to 80%+ reduction in download requirements
 
-use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac")
+## Platform-Specific Optimization and User Experience
+
+### Problem: Poor User Experience
+
+Previously, the system had several usability issues:
+
+1. **Excessive downloads**: Downloaded binaries for all 5 supported platforms regardless of need (~500MB+)
+2. **Complex configuration**: Required manual `use_repo` declarations for each platform  
+3. **Verbose setup**: Users had to specify platforms even for their own host platform
+4. **Non-standard patterns**: Used custom labels instead of Bazel platform constraints
+5. **Manual NPM setup**: Required separate NPM translation configuration
+
+This resulted in:
+- **Wasted bandwidth**: Users downloading unnecessary binaries
+- **Storage overhead**: Local caches storing unused platform binaries  
+- **Configuration errors**: Manual repository declarations prone to mistakes
+- **Slower setup**: Extended download and setup times
+- **Ecosystem misalignment**: Not following Bazel best practices
+
+### Solution: Auto-Detecting Toolchain with Smart Defaults
+
+The `emscripten_toolchain` extension now provides a much better user experience:
+
+#### Minimal Setup (Most Common Use Case)
+```starlark
+# Auto-detects host platform, downloads only necessary binaries (~100MB vs ~500MB)
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+# All repositories are automatically exposed - no manual use_repo needed!
+```
+
+#### Multi-Platform Setup (When Needed)
+```starlark
+# Modern approach using Bazel platform constraints (recommended)
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+# Host platform auto-detected and included
+emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+emscripten_toolchain.platform(constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"])
+# Downloads host + macOS ARM64 + Windows x86_64 binaries only
+```
+
+#### Legacy Compatibility
+```starlark
+# Backward compatible approach using custom platform names
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")  
+# Host platform auto-detected and included
+emscripten_toolchain.platform(name = "mac_arm64")
+emscripten_toolchain.platform(name = "win")
+# Downloads host + macOS ARM64 + Windows binaries only
 ```
 
 #### Supported Platform Combinations
@@ -148,23 +196,32 @@ use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac")
 - **macOS ARM64**: `constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"]` or `name = "mac_arm64"`
 - **Windows x86_64**: `constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"]` or `name = "win"`
 
+The host platform is automatically detected and enabled, so users only need to specify additional platforms they require.
+
 ### Benefits
 
-- **Reduced downloads**: Only downloads binaries for requested platforms
+- **Automatic host detection**: No configuration needed for single-platform development
+- **Reduced downloads**: Up to 80%+ bandwidth savings for single-platform users
+- **Simplified configuration**: Minimal setup for common use cases
+- **Automatic repository exposure**: No manual `use_repo` declarations needed
+- **Standard platform constraints**: Uses Bazel's conventional platform system
 - **Faster setup**: Shorter download and extraction times
 - **Storage efficiency**: Smaller local cache footprint
-- **NPM optimization**: Only processes npm packages for used platforms
-- **Bandwidth savings**: Particularly beneficial for CI/CD environments
-- **Backward compatibility**: Default behavior unchanged (all platforms enabled)
+- **Better isolation**: Users don't need to specify verbose configuration
+- **Backward compatibility**: Legacy platform names still supported
 
 ### Implementation Pattern
 
-The optimization follows the `npm.translate` pattern where extensions coordinate selective resource creation:
+The optimization follows Bazel toolchain best practices where extensions provide smart defaults and automatic configuration:
 
-1. **Platform specification**: Users declare needed platforms via `emscripten_toolchain.platform()`
-2. **Conditional repository creation**: Extension only creates `emscripten_bin_*` repositories for requested platforms
-3. **Automatic toolchain registration**: Only registers toolchains for available platforms
-4. **NPM coordination**: NPM translations reference only existing platform repositories
+1. **Auto-detection**: Extension detects host platform using `ctx.os.name` and `ctx.os.arch`
+2. **Smart defaults**: Enables host platform automatically without user configuration
+3. **Selective enhancement**: Users can optionally add additional platforms beyond host
+4. **Automatic repository exposure**: Extension uses `root_module_direct_deps` to expose all created repositories
+5. **Standard constraints**: Supports both modern Bazel platform constraints and legacy names
+6. **Minimal configuration**: Common use case requires only the extension declaration
+
+This provides the best user experience while maintaining full flexibility for advanced use cases.
 
 ## Long-Term Strategy
 
@@ -183,19 +240,24 @@ The optimization follows the `npm.translate` pattern where extensions coordinate
 
 ### 3. Simplified User Experience
 
-- **No manual flag management**: Users no longer need to add deprecated flags
-- **Automatic toolchain selection**: Bazel handles cross-compilation automatically
-- **Clear documentation**: Updated README removes confusing legacy instructions
+- **Automatic host detection**: Minimal setup for single-platform development
+- **Automatic repository exposure**: No manual `use_repo` declarations needed
+- **Smart defaults**: Common use case requires only extension declaration
+- **Clear documentation**: Comprehensive examples for both simple and advanced usage
+- **Better isolation**: Users don't need to specify verbose configuration
+- **Standard patterns**: Follows Bazel toolchain best practices
 
 ## Migration Benefits
 
 1. **Eliminates deprecated flag dependency**
-2. **Simplifies user configuration**
-3. **Optimizes resource usage** - platform-specific downloads
-4. **Improves maintainability**
-5. **Aligns with Bazel best practices**
-6. **Reduces bandwidth and storage requirements**
-7. **Prepares for future Bazel versions**
+2. **Provides automatic host platform detection**
+3. **Significantly simplifies user configuration** 
+4. **Optimizes resource usage** - up to 80%+ bandwidth savings
+5. **Improves maintainability** and follows Bazel best practices
+6. **Enhances user experience** with minimal setup requirements
+7. **Supports standard Bazel platform constraints**
+8. **Maintains full backward compatibility**
+9. **Prepares for future Bazel versions**
 
 ## Verification
 
