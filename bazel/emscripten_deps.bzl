@@ -1,27 +1,24 @@
 """
-DEPRECATED: This module extension is no longer used.
+Utility functions for Emscripten repository management.
 
-Use the consolidated emscripten_toolchain extension instead:
-
-```starlark
-emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
-emscripten_toolchain.config(version = "latest")  # Optional version configuration
-emscripten_toolchain.platform(name = "linux")   # Optional platform selection
-```
-
-The emscripten_toolchain extension handles:
-1. Emscripten binary downloads (emscripten_bin_* repositories)
-2. Toolchain registration
-3. Platform-specific optimization to reduce unnecessary downloads
+This module contains helper functions that are used by the emscripten_toolchain
+module extension. The emscripten_deps extension itself is deprecated.
 """
 
 def emscripten_repo_name(name):
-    """Helper function to generate emscripten repository names."""
+    """Helper function to generate emscripten repository names.
+    
+    Args:
+        name: Platform name (e.g., "linux", "mac_arm64")
+        
+    Returns:
+        Repository name string (e.g., "emscripten_bin_linux")
+    """
     return "emscripten_bin_{}".format(name)
 
-# Legacy extension kept for backward compatibility
+# Deprecated extension - kept for backward compatibility but will fail if used
 def _emscripten_deps_impl(ctx):
-    fail("emscripten_deps extension is deprecated. Use emscripten_toolchain extension instead.")
+    fail("emscripten_deps extension is deprecated. Use emscripten_toolchain extension instead. See TOOLCHAIN_MODERNIZATION.md for migration instructions.")
 
 emscripten_deps = module_extension(
     tag_classes = {},

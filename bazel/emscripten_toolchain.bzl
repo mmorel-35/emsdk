@@ -1,6 +1,7 @@
 """Module extension for coordinating Emscripten platform selection and toolchain registration."""
 
 load(":emscripten_deps.bzl", "emscripten_repo_name")
+load(":platforms.bzl", "constraint_to_platform_name", "detect_host_platform", "ALL_PLATFORMS")
 load(":remote_emscripten_repository.bzl", "remote_emscripten_repository")
 load(":revisions.bzl", "EMSCRIPTEN_TAGS")
 
@@ -14,34 +15,6 @@ def _empty_repository_impl(ctx):
 _empty_repository = repository_rule(
     implementation = _empty_repository_impl,
 )
-
-def _constraint_to_platform_name(constraints):
-    """Convert platform constraints to internal platform name."""
-    os_constraint = None
-    cpu_constraint = None
-    
-    for constraint in constraints:
-        if constraint.startswith("@platforms//os:"):
-            os_constraint = constraint[len("@platforms//os:"):]
-        elif constraint.startswith("@platforms//cpu:"):
-            cpu_constraint = constraint[len("@platforms//cpu:"):]
-    
-    if not os_constraint or not cpu_constraint:
-        fail("Platform must specify both OS and CPU constraints")
-    
-    # Map to internal platform names
-    if os_constraint == "linux" and cpu_constraint == "x86_64":
-        return "linux"
-    elif os_constraint == "linux" and cpu_constraint == "arm64":
-        return "linux_arm64"
-    elif os_constraint == "macos" and cpu_constraint == "x86_64":
-        return "mac"
-    elif os_constraint == "macos" and cpu_constraint == "arm64":
-        return "mac_arm64"
-    elif os_constraint == "windows" and cpu_constraint == "x86_64":
-        return "win"
-    else:
-        fail("Unsupported platform combination: {} + {}".format(os_constraint, cpu_constraint))
 
 def _emscripten_toolchain_impl(ctx):
     """Implementation of the emscripten_toolchain module extension.
@@ -71,22 +44,7 @@ def _emscripten_toolchain_impl(ctx):
     revision = EMSCRIPTEN_TAGS[version]
     
     # Auto-detect host platform for minimal configuration
-    host_platform = None
-    if ctx.os.name.startswith("linux"):
-        if ctx.os.arch == "aarch64" or ctx.os.arch == "arm64":
-            host_platform = "linux_arm64"
-        else:
-            host_platform = "linux"
-    elif ctx.os.name.startswith("mac"):
-        if ctx.os.arch == "aarch64" or ctx.os.arch == "arm64":
-            host_platform = "mac_arm64"
-        else:
-            host_platform = "mac"
-    elif ctx.os.name.startswith("windows"):
-        host_platform = "win"
-    else:
-        # Fallback to linux for unknown platforms
-        host_platform = "linux"
+    host_platform = detect_host_platform(ctx)
     
     # Start with host platform enabled by default
     enabled_platforms = [host_platform]
@@ -96,11 +54,14 @@ def _emscripten_toolchain_impl(ctx):
         for config in mod.tags.platform:
             if hasattr(config, 'constraints') and config.constraints:
                 # New constraint-based platform specification
-                platform_name = _constraint_to_platform_name(config.constraints)
+                platform_name = constraint_to_platform_name(config.constraints)
                 if platform_name not in enabled_platforms:
                     enabled_platforms.append(platform_name)
             elif hasattr(config, 'name') and config.name:
                 # Legacy name-based platform specification (for backward compatibility)
+                if config.name not in ALL_PLATFORMS:
+                    fail("Unknown platform name: {}. Supported: {}".format(
+                        config.name, ", ".join(ALL_PLATFORMS)))
                 if config.name not in enabled_platforms:
                     enabled_platforms.append(config.name)
     
@@ -182,8 +143,7 @@ emscripten_toolchain = module_extension(
         "platform": tag_class(
             attrs = {
                 "name": attr.string(
-                    doc = "Platform name to enable toolchain for (legacy)",
-                    values = ["linux", "linux_arm64", "mac", "mac_arm64", "win"],
+                    doc = "Platform name to enable toolchain for (legacy). Supported: {}".format(", ".join(ALL_PLATFORMS)),
                 ),
                 "constraints": attr.string_list(
                     doc = "Platform constraints to enable toolchain for (recommended). Must include both OS and CPU constraints, e.g., ['@platforms//os:linux', '@platforms//cpu:x86_64']",

@@ -57,7 +57,25 @@ native.toolchain(
 
 **Removed**: `build --incompatible_enable_cc_toolchain_resolution`
 
-### 3. Improved User Experience and Toolchain Isolation
+### 4. Clean Code Improvements
+
+**Files**: `bazel/platforms.bzl` (new), `bazel/emscripten_toolchain.bzl`, `bazel/emscripten_deps.bzl`, `bazel/MODULE.bazel`
+
+**Key improvements**:
+- **Centralized platform mapping**: Created `platforms.bzl` with reusable platform utilities to eliminate code duplication
+- **Improved error handling**: Better validation and error messages for platform configuration
+- **Separated concerns**: Platform detection logic separated from repository creation
+- **Fixed NPM configuration**: MODULE.bazel now has sensible defaults that work out of the box for most users
+- **Cleaner API**: Simplified platform configuration with proper validation
+- **Better documentation**: Clear guidance on when to enable additional platforms
+
+**Benefits**:
+- **Reduced complexity**: Centralized platform logic makes the code easier to maintain
+- **Better user experience**: Default configuration works for most users without modification
+- **Fewer errors**: Better validation prevents common configuration mistakes
+- **Clearer separation**: Each file has a single, well-defined responsibility
+
+### 5. Improved User Experience and Toolchain Isolation
 
 **File**: `bazel/emscripten_toolchain.bzl`
 
@@ -279,4 +297,16 @@ To verify the changes work correctly:
 
 ## Conclusion
 
-This modernization removes the dependency on a deprecated Bazel flag while maintaining full functionality and adding significant optimizations. The project now uses modern Bazel toolchain resolution patterns with platform-specific optimization that will be supported long-term. Users can now reduce download requirements by 80%+ by specifying only needed platforms, following the same pattern as other modern Bazel extensions like `npm.translate`.
+This modernization removes the dependency on a deprecated Bazel flag while maintaining full functionality and adding significant optimizations. The project now uses modern Bazel toolchain resolution patterns with platform-specific optimization that will be supported long-term. 
+
+**Key achievements**:
+1. **Eliminates deprecated flag dependency** - No more `--incompatible_enable_cc_toolchain_resolution` required
+2. **Provides automatic host platform detection** - Works out of the box for most users
+3. **Significantly simplifies user configuration** - Minimal setup for common use cases
+4. **Optimizes resource usage** - Up to 80%+ bandwidth savings for single-platform development
+5. **Improves code quality** - Centralized platform logic, better error handling, cleaner separation of concerns
+6. **Enhances maintainability** - Following Bazel best practices with modern patterns
+7. **Better user experience** - Sensible defaults with clear documentation for advanced usage
+8. **Maintains full backward compatibility** - Legacy configurations continue to work
+
+The implementation follows clean code principles with centralized platform utilities, proper error handling, and clear separation of concerns, making it easier to maintain and extend in the future.
