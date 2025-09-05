@@ -18,10 +18,23 @@ git_override(
 
 ## Platform-Specific Optimization
 
-By default, the Emscripten toolchain downloads binaries for all supported platforms (Linux, Linux ARM64, Mac, Mac ARM64, Windows). To reduce bandwidth and storage usage, you can specify only the platforms you need:
+By default, the Emscripten toolchain downloads binaries for all supported platforms (Linux, Linux ARM64, Mac, Mac ARM64, Windows). To reduce bandwidth and storage usage, you can specify only the platforms you need using Bazel platform constraints:
 
+### Recommended Approach (Platform Constraints)
 ```starlark
-# Configure toolchains and specify only needed platforms
+# Configure toolchains using Bazel platform constraints
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten_toolchain.platform(constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"])
+emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+# Only Linux x86_64 and Mac ARM64 binaries will be downloaded
+
+# Use the selected repositories
+use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac_arm64")
+```
+
+### Legacy Approach (Custom Labels)
+```starlark
+# Configure toolchains using legacy custom platform names
 emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
 emscripten_toolchain.platform(name = "linux")
 emscripten_toolchain.platform(name = "mac")
@@ -30,6 +43,13 @@ emscripten_toolchain.platform(name = "mac")
 # Use the selected repositories
 use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac")
 ```
+
+### Supported Platform Combinations
+- Linux x86_64: `["@platforms//os:linux", "@platforms//cpu:x86_64"]` (or `name = "linux"`)
+- Linux ARM64: `["@platforms//os:linux", "@platforms//cpu:arm64"]` (or `name = "linux_arm64"`)  
+- macOS x86_64: `["@platforms//os:macos", "@platforms//cpu:x86_64"]` (or `name = "mac"`)
+- macOS ARM64: `["@platforms//os:macos", "@platforms//cpu:arm64"]` (or `name = "mac_arm64"`)
+- Windows x86_64: `["@platforms//os:windows", "@platforms//cpu:x86_64"]` (or `name = "win"`)
 
 If you don't specify any platforms, all available platforms are enabled by default for backward compatibility.
 
@@ -40,8 +60,8 @@ You can use a different version of this SDK by changing it in your `MODULE.bazel
 ```starlark
 emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
 emscripten_toolchain.config(version = "4.0.1")
-# Optionally specify platforms to optimize downloads
-emscripten_toolchain.platform(name = "linux")
+# Optionally specify platforms using Bazel constraints to optimize downloads
+emscripten_toolchain.platform(constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"])
 ```
 
 ## Building

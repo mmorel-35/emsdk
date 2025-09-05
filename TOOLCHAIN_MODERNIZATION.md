@@ -117,10 +117,22 @@ Previously, the system downloaded binaries for all 5 supported platforms (Linux,
 
 ### Solution: Selective Platform Downloads
 
-The `emscripten_toolchain` extension now coordinates platform selection across all components:
+The `emscripten_toolchain` extension now coordinates platform selection across all components and supports both modern Bazel platform constraints and legacy platform names:
 
+#### Modern Approach (Recommended)
 ```starlark
-# In MODULE.bazel - only download what you need
+# In MODULE.bazel - use Bazel platform constraints
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten_toolchain.platform(constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"])
+emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+# Only Linux x86_64 and Mac ARM64 binaries are downloaded and processed
+
+use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac_arm64")
+```
+
+#### Legacy Approach (Backward Compatibility)
+```starlark
+# In MODULE.bazel - use custom platform names
 emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
 emscripten_toolchain.platform(name = "linux")
 emscripten_toolchain.platform(name = "mac") 
@@ -128,6 +140,13 @@ emscripten_toolchain.platform(name = "mac")
 
 use_repo(emscripten_toolchain, "emscripten_bin_linux", "emscripten_bin_mac")
 ```
+
+#### Supported Platform Combinations
+- **Linux x86_64**: `constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"]` or `name = "linux"`
+- **Linux ARM64**: `constraints = ["@platforms//os:linux", "@platforms//cpu:arm64"]` or `name = "linux_arm64"`
+- **macOS x86_64**: `constraints = ["@platforms//os:macos", "@platforms//cpu:x86_64"]` or `name = "mac"`
+- **macOS ARM64**: `constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"]` or `name = "mac_arm64"`
+- **Windows x86_64**: `constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"]` or `name = "win"`
 
 ### Benefits
 
@@ -187,6 +206,11 @@ To verify the changes work correctly:
 3. **Toolchain selection**: Bazel should automatically select the correct toolchain based on host platform
 4. **Platform optimization**: Test selective platform downloads:
    ```starlark
+   # Modern approach using Bazel platform constraints
+   emscripten_toolchain.platform(constraints = ["@platforms//os:linux", "@platforms//cpu:x86_64"])
+   # Verify only linux binaries are downloaded
+   
+   # Legacy approach using custom names
    emscripten_toolchain.platform(name = "linux")
    # Verify only linux binaries are downloaded
    ```

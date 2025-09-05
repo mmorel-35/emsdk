@@ -15,6 +15,34 @@ _empty_repository = repository_rule(
     implementation = _empty_repository_impl,
 )
 
+def _constraint_to_platform_name(constraints):
+    """Convert platform constraints to internal platform name."""
+    os_constraint = None
+    cpu_constraint = None
+    
+    for constraint in constraints:
+        if constraint.startswith("@platforms//os:"):
+            os_constraint = constraint[len("@platforms//os:"):]
+        elif constraint.startswith("@platforms//cpu:"):
+            cpu_constraint = constraint[len("@platforms//cpu:"):]
+    
+    if not os_constraint or not cpu_constraint:
+        fail("Platform must specify both OS and CPU constraints")
+    
+    # Map to internal platform names
+    if os_constraint == "linux" and cpu_constraint == "x86_64":
+        return "linux"
+    elif os_constraint == "linux" and cpu_constraint == "arm64":
+        return "linux_arm64"
+    elif os_constraint == "macos" and cpu_constraint == "x86_64":
+        return "mac"
+    elif os_constraint == "macos" and cpu_constraint == "arm64":
+        return "mac_arm64"
+    elif os_constraint == "windows" and cpu_constraint == "x86_64":
+        return "win"
+    else:
+        fail("Unsupported platform combination: {} + {}".format(os_constraint, cpu_constraint))
+
 def _emscripten_toolchain_impl(ctx):
     """Implementation of the emscripten_toolchain module extension.
     
@@ -46,8 +74,15 @@ def _emscripten_toolchain_impl(ctx):
     enabled_platforms = []
     for mod in ctx.modules:
         for config in mod.tags.platform:
-            if config.name not in enabled_platforms:
-                enabled_platforms.append(config.name)
+            if hasattr(config, 'constraints') and config.constraints:
+                # New constraint-based platform specification
+                platform_name = _constraint_to_platform_name(config.constraints)
+                if platform_name not in enabled_platforms:
+                    enabled_platforms.append(platform_name)
+            elif hasattr(config, 'name') and config.name:
+                # Legacy name-based platform specification (for backward compatibility)
+                if config.name not in enabled_platforms:
+                    enabled_platforms.append(config.name)
     
     # If no platforms specified, enable all available platforms (backward compatibility)
     if not enabled_platforms:
@@ -130,9 +165,11 @@ emscripten_toolchain = module_extension(
         "platform": tag_class(
             attrs = {
                 "name": attr.string(
-                    doc = "Platform name to enable toolchain for",
+                    doc = "Platform name to enable toolchain for (legacy)",
                     values = ["linux", "linux_arm64", "mac", "mac_arm64", "win"],
-                    mandatory = True,
+                ),
+                "constraints": attr.string_list(
+                    doc = "Platform constraints to enable toolchain for (recommended). Must include both OS and CPU constraints, e.g., ['@platforms//os:linux', '@platforms//cpu:x86_64']",
                 ),
             },
         ),
