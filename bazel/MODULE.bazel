@@ -69,3 +69,6 @@ use_repo(
 
 emscripten_cache = use_extension("//:emscripten_cache.bzl", "emscripten_cache")
 use_repo(emscripten_cache, "emscripten_cache")
+
+# Register Emscripten toolchains via dedicated module extension
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")

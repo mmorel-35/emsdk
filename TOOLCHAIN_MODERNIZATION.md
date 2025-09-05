@@ -83,21 +83,25 @@ The project defines toolchains for different host platforms:
 
 ### Registration
 
-Toolchains are automatically registered by the `emscripten_deps` module extension in `emscripten_deps.bzl`. The extension dynamically registers toolchains based on the available Emscripten releases for each platform:
+Toolchains are automatically registered by a dedicated `emscripten_toolchain` module extension in `emscripten_toolchain.bzl`. This provides better separation of concerns by decoupling toolchain registration from dependency management:
 
 ```starlark
-# In emscripten_deps.bzl - automatically registers toolchains
-return ctx.extension_metadata(
-    root_module_direct_deps = [],
-    root_module_direct_dev_deps = [],
-    toolchains_registered = toolchains_to_register,
-)
+# In MODULE.bazel
+emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+```
+
+The extension supports configurable platform selection:
+```starlark
+# Optional: Register toolchains for specific platforms only
+emscripten_toolchain.platform(name = "linux")
+emscripten_toolchain.platform(name = "mac")
 ```
 
 This approach provides better bzlmod compliance by:
-- **Encapsulating toolchain management**: Everything related to Emscripten toolchains is handled in one module extension
-- **Dynamic registration**: Only registers toolchains for platforms that have available releases
-- **Reduced boilerplate**: No manual `register_toolchains()` calls needed in MODULE.bazel
+- **Separation of concerns**: Toolchain registration is separate from dependency management
+- **Configurability**: Users can selectively enable toolchains for specific platforms
+- **Modularity**: Toolchain configuration is self-contained in its own extension
+- **Reduced coupling**: Changes to dependency management don't affect toolchain registration
 
 ## Long-Term Strategy
 
