@@ -83,16 +83,21 @@ The project defines toolchains for different host platforms:
 
 ### Registration
 
-All toolchains are registered in `MODULE.bazel`:
+Toolchains are automatically registered by the `emscripten_deps` module extension in `emscripten_deps.bzl`. The extension dynamically registers toolchains based on the available Emscripten releases for each platform:
+
 ```starlark
-register_toolchains(
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux_arm64",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac_arm64",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_win",
+# In emscripten_deps.bzl - automatically registers toolchains
+return ctx.extension_metadata(
+    root_module_direct_deps = [],
+    root_module_direct_dev_deps = [],
+    toolchains_registered = toolchains_to_register,
 )
 ```
+
+This approach provides better bzlmod compliance by:
+- **Encapsulating toolchain management**: Everything related to Emscripten toolchains is handled in one module extension
+- **Dynamic registration**: Only registers toolchains for platforms that have available releases
+- **Reduced boilerplate**: No manual `register_toolchains()` calls needed in MODULE.bazel
 
 ## Long-Term Strategy
 
@@ -106,7 +111,8 @@ register_toolchains(
 
 - **Modern Bazel patterns**: Uses current best practices for toolchain definition
 - **Platform constraints**: Proper use of Bazel's platform/constraint system
-- **Bzlmod support**: Already using MODULE.bazel instead of WORKSPACE
+- **Bzlmod support**: Fully integrated with MODULE.bazel using module extensions
+- **Automatic toolchain registration**: Toolchains are registered dynamically by module extensions
 
 ### 3. Simplified User Experience
 

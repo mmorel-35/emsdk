@@ -33,6 +33,9 @@ def _emscripten_deps_impl(ctx):
 
     emscripten_url = "https://storage.googleapis.com/webassembly/emscripten-releases-builds/{}/{}/wasm-binaries{}.{}"
 
+    # Keep track of toolchains to register
+    toolchains_to_register = []
+
     remote_emscripten_repository(
         name = emscripten_repo_name("linux"),
         bin_extension = "",
@@ -41,6 +44,7 @@ def _emscripten_deps_impl(ctx):
         type = "tar.xz",
         url = emscripten_url.format("linux", revision.hash, "", "tar.xz"),
     )
+    toolchains_to_register.append("//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux")
 
     # Not all versions have a linux/arm64 release: https://github.com/emscripten-core/emsdk/issues/547
     if hasattr(revision, "sha_linux_arm64"):
@@ -52,6 +56,7 @@ def _emscripten_deps_impl(ctx):
             type = "tar.xz",
             url = emscripten_url.format("linux", revision.hash, "-arm64", "tar.xz"),
         )
+        toolchains_to_register.append("//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux_arm64")
     else:
         _empty_repository(
             name = emscripten_repo_name("linux_arm64"),
@@ -65,6 +70,7 @@ def _emscripten_deps_impl(ctx):
         type = "tar.xz",
         url = emscripten_url.format("mac", revision.hash, "", "tar.xz"),
     )
+    toolchains_to_register.append("//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac")
 
     remote_emscripten_repository(
         name = emscripten_repo_name("mac_arm64"),
@@ -74,6 +80,7 @@ def _emscripten_deps_impl(ctx):
         type = "tar.xz",
         url = emscripten_url.format("mac", revision.hash, "-arm64", "tar.xz"),
     )
+    toolchains_to_register.append("//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac_arm64")
 
     remote_emscripten_repository(
         name = emscripten_repo_name("win"),
@@ -82,6 +89,13 @@ def _emscripten_deps_impl(ctx):
         strip_prefix = "install",
         type = "zip",
         url = emscripten_url.format("win", revision.hash, "", "zip"),
+    )
+    toolchains_to_register.append("//emscripten_toolchain:cc-toolchain-wasm-emscripten_win")
+
+    return ctx.extension_metadata(
+        root_module_direct_deps = [],
+        root_module_direct_dev_deps = [],
+        toolchains_registered = toolchains_to_register,
     )
 
 emscripten_deps = module_extension(

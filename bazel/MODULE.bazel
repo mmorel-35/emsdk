@@ -69,11 +69,3 @@ use_repo(
 
 emscripten_cache = use_extension("//:emscripten_cache.bzl", "emscripten_cache")
 use_repo(emscripten_cache, "emscripten_cache")
-
-register_toolchains(
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux_arm64",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac_arm64",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_win",
-)
