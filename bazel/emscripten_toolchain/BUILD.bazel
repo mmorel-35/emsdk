@@ -40,5 +40,4 @@ create_toolchains(
 py_binary(
     name = "wasm_binary",
     srcs = ["wasm_binary.py"],
-    python_version = "PY3",
 )
