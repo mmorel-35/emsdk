@@ -15,7 +15,7 @@ load(
     "with_feature_set",
     _flag_set = "flag_set",
 )
-load("@rules_cc//cc/toolchains:cc_toolchain_config_info.bzl", "CcToolchainConfigInfo")
+load("@rules_cc//cc:defs.bzl", "CcToolchainConfigInfo")
 
 def flag_set(flags = None, features = None, not_features = None, **kwargs):
     """Extension to flag_set which allows for a "simple" form.
