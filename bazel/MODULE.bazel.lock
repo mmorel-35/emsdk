@@ -373,6 +373,54 @@
             "rules_kotlin~",
             "bazel_tools",
             "bazel_tools"
+          ],
+          [
+            "tar.bzl~",
+            "aspect_bazel_lib",
+            "aspect_bazel_lib~"
+          ],
+          [
+            "tar.bzl~",
+            "bazel_skylib",
+            "bazel_skylib~"
+          ],
+          [
+            "tar.bzl~",
+            "tar.bzl",
+            "tar.bzl~"
+          ]
+        ]
+      }
+    },
+    "@@aspect_tools_telemetry~//:extension.bzl%telemetry": {
+      "general": {
+        "bzlTransitiveDigest": "cl5A2O84vDL6Tt+Qga8FCj1DUDGqn+e7ly5rZ+4xvcc=",
+        "usagesDigest": "jRvIVdFvOhSriRV1N+rIDqHJdSDi/sC+6R+oUjvkDNE=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "aspect_tools_telemetry_report": {
+            "bzlFile": "@@aspect_tools_telemetry~//:extension.bzl",
+            "ruleClassName": "tel_repository",
+            "attributes": {
+              "deps": {
+                "aspect_rules_js": "2.9.2",
+                "aspect_tools_telemetry": "0.3.3"
+              }
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "aspect_tools_telemetry~",
+            "bazel_lib",
+            "bazel_lib~"
+          ],
+          [
+            "aspect_tools_telemetry~",
+            "bazel_skylib",
+            "bazel_skylib~"
           ]
         ]
       }
