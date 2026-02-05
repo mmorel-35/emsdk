@@ -60,6 +60,7 @@ def create_toolchains(name, repo_name, exec_compatible_with):
             "@emscripten_cache//:emscripten_config",
             "@emsdk//emscripten_toolchain:env.sh",
             "@emsdk//emscripten_toolchain:env.bat",
+            "@emsdk//emscripten_toolchain:find_python.sh",
             "@nodejs//:node_files",
         ],
     )
