@@ -1,1 +1,1 @@
-build --incompatible_enable_cc_toolchain_resolution
+# Legacy flag --incompatible_enable_cc_toolchain_resolution removed as cc_toolchain_suite is no longer used

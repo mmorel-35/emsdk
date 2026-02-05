@@ -14,27 +14,72 @@ git_override(
     strip_prefix = "bazel",
     tag = emsdk_version,
 )
+
+# Simplified Emscripten toolchain setup
+# Auto-detects host platform and downloads only necessary binaries
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+
+# Optional: Add additional platforms beyond the auto-detected host
+# emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+# emscripten_toolchain.platform(constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"])
+
+# All repositories are automatically exposed - no manual use_repo needed!
 ```
 
-You can use a different version of this SDK by changing it in your `MODULE.bazel` file. The Emscripten version is by default the same as the SDK version, but you can use a different one as well by adding to your `MODULE.bazel`:
+## Platform-Specific Optimization
 
+The Emscripten toolchain now **automatically detects your host platform** and downloads only the necessary binaries by default. This provides significant bandwidth and storage savings (up to 80%+ reduction) compared to downloading all platforms.
+
+### Minimal Setup (Recommended)
+```starlark
+# Only downloads binaries for your current platform automatically
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
 ```
-emscripten_deps = use_extension(
-    "@emsdk//:emscripten_deps.bzl",
-    "emscripten_deps",
-)
-emscripten_deps.config(version = "4.0.1")
+
+### Multi-Platform Setup
+If you need to support additional platforms beyond your host (e.g., for CI/CD or cross-platform builds):
+
+#### Modern Approach (Platform Constraints)
+```starlark
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+# Host platform is auto-detected and included
+emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+emscripten_toolchain.platform(constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"])
+# Downloads host + macOS ARM64 + Windows x86_64 binaries
+```
+
+#### Legacy Approach (Custom Labels)
+```starlark
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+# Host platform is auto-detected and included
+emscripten_toolchain.platform(name = "mac_arm64")
+emscripten_toolchain.platform(name = "win")
+# Downloads host + macOS ARM64 + Windows binaries
+```
+
+### Supported Platform Combinations
+- Linux x86_64: `["@platforms//os:linux", "@platforms//cpu:x86_64"]` (or `name = "linux"`)
+- Linux ARM64: `["@platforms//os:linux", "@platforms//cpu:arm64"]` (or `name = "linux_arm64"`)  
+- macOS x86_64: `["@platforms//os:macos", "@platforms//cpu:x86_64"]` (or `name = "mac"`)
+- macOS ARM64: `["@platforms//os:macos", "@platforms//cpu:arm64"]` (or `name = "mac_arm64"`)
+- Windows x86_64: `["@platforms//os:windows", "@platforms//cpu:x86_64"]` (or `name = "win"`)
+
+The host platform is automatically detected and enabled, so you only need to specify additional platforms you require.
+
+## Version Configuration
+
+You can use a different version of Emscripten by configuring it in the extension:
+
+```starlark
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten_toolchain.config(version = "4.0.1")
+# Optionally specify additional platforms beyond the auto-detected host
+emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
 ```
 
 ## Building
 
-Put the following line into your `.bazelrc`:
-
-```
-build --incompatible_enable_cc_toolchain_resolution
-```
-
-Then write a new rule wrapping your `cc_binary`.
+Write a new rule wrapping your `cc_binary`.
 
 ```starlark
 load("@rules_cc//cc:defs.bzl", "cc_binary")

@@ -138,11 +138,3 @@ def create_toolchains(name, repo_name, exec_compatible_with):
         toolchain = cc_wasm_target,
         toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
     )
-
-    native.cc_toolchain_suite(
-        name = "everything-" + name,
-        toolchains = {
-            "wasm": cc_wasm_target,
-            "wasm|emscripten": cc_wasm_target,
-        },
-    )
