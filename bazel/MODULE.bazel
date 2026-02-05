@@ -10,9 +10,12 @@ bazel_dep(name = "rules_nodejs", version = "6.7.3")
 bazel_dep(name = "rules_cc", version = "0.2.16")
 bazel_dep(name = "rules_python", version = "1.8.3")
 
+# Emscripten requires Python 3.10+ for match statement support
+# Supported versions: 3.10 (min), 3.11, 3.12, 3.13
+# See bazel/PYTHON.md for details
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
-    python_version = "3.13",
+    python_version = "3.13",  # Default version - users can override in their MODULE.bazel
 )
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
