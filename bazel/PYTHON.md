@@ -32,6 +32,9 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
     )
     for python_version in PYTHON_VERSIONS
 ]
+
+# Expose Python runtime for use in toolchain
+use_repo(python, "python_3_13")
 ```
 
 The last version in the list (3.13) is set as the default. Users can select a different version by setting it in their project's `.bazelrc`:
@@ -42,13 +45,12 @@ build --python_version=3.11
 
 Or by configuring their own Python toolchain in their `MODULE.bazel`.
 
-## Local Builds
+## How It Works
 
-When building locally outside of Bazel's managed environment, the shell scripts will automatically search for a suitable Python version in this order:
-1. python3.13
-2. python3.12
-3. python3.11
-4. python3.10
-5. python3 (validated to be >= 3.10)
+Bazel's registered Python toolchains are hermetically available during build execution. The emscripten shell scripts (`emcc.sh`, `emar.sh`, `emcc_link.sh`) simply call `python3` directly, and Bazel ensures the correct version is available in the execution environment.
 
-If no suitable Python version is found, the build will fail with a clear error message.
+This approach:
+- Avoids searching PATH for Python
+- Uses Bazel's hermetic toolchain resolution
+- Ensures consistent Python version across all platforms
+- Simplifies the shell scripts (no version detection needed)
