@@ -25,23 +25,27 @@ def invoke_tool(tool_name, args):
     env_vars, em_path = setup_emscripten_env()
     tool_path = em_path / f'{tool_name}.py'
     
+    # Pass through stdout/stderr to maintain visibility of tool output
     cmd = [sys.executable, str(tool_path)] + args
-    proc = subprocess.run(cmd, env=env_vars)
+    proc = subprocess.run(cmd, env=env_vars, check=False)
     return proc.returncode
 
 
 def main():
-    script_name = Path(sys.argv[0]).stem
+    # Extract tool name from the script's base name
+    # The py_binary name (e.g., emcc_launcher) determines which tool to invoke
+    script_base = Path(sys.argv[0]).stem
     
-    # Determine which tool to invoke based on script name
+    # Map launcher names to Emscripten tool names
     tool_mapping = {
         'emcc_launcher': 'emcc',
         'emar_launcher': 'emar',
     }
     
-    tool = tool_mapping.get(script_name)
+    tool = tool_mapping.get(script_base)
     if not tool:
-        print(f"Error: Unknown launcher {script_name}", file=sys.stderr)
+        sys.stderr.write(f"Error: Unknown launcher script: {script_base}\n")
+        sys.stderr.write(f"Expected one of: {', '.join(tool_mapping.keys())}\n")
         sys.exit(1)
     
     exit_code = invoke_tool(tool, sys.argv[1:])
