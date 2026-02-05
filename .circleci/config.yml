@@ -280,6 +280,20 @@ jobs:
     steps:
       - test-bazel-linux
 
+  test-bazel8-linux:
+    executor: ubuntu
+    environment:
+      USE_BAZEL_VERSION: "8.x"
+    steps:
+      - test-bazel-linux
+
+  test-bazel9-linux:
+    executor: ubuntu
+    environment:
+      USE_BAZEL_VERSION: "9.x"
+    steps:
+      - test-bazel-linux
+
   test-bazel-latest-linux:
     executor: ubuntu
     steps:
@@ -289,6 +303,20 @@ jobs:
     executor: mac_arm64
     environment:
       USE_BAZEL_VERSION: "7.x"
+    steps:
+      - test-bazel-mac
+
+  test-bazel8-mac-arm64:
+    executor: mac_arm64
+    environment:
+      USE_BAZEL_VERSION: "8.x"
+    steps:
+      - test-bazel-mac
+
+  test-bazel9-mac-arm64:
+    executor: mac_arm64
+    environment:
+      USE_BAZEL_VERSION: "9.x"
     steps:
       - test-bazel-mac
 
@@ -307,6 +335,32 @@ jobs:
       # For some reason version resolution with "7.x" does not work on Windows,
       # so we have to specify a full version.
       USE_BAZEL_VERSION: "7.6.1"
+    steps:
+      - test-bazel-windows
+
+  test-bazel8-windows:
+    executor:
+      name: win/server-2019
+      shell: powershell.exe -ExecutionPolicy Bypass
+    environment:
+      PYTHONUNBUFFERED: "1"
+      EMSDK_NOTTY: "1"
+      # For some reason version resolution with "x.x" does not work on Windows,
+      # so we have to specify a full version.
+      USE_BAZEL_VERSION: "8.0.0"
+    steps:
+      - test-bazel-windows
+
+  test-bazel9-windows:
+    executor:
+      name: win/server-2019
+      shell: powershell.exe -ExecutionPolicy Bypass
+    environment:
+      PYTHONUNBUFFERED: "1"
+      EMSDK_NOTTY: "1"
+      # For some reason version resolution with "x.x" does not work on Windows,
+      # so we have to specify a full version.
+      USE_BAZEL_VERSION: "9.0.0"
     steps:
       - test-bazel-windows
 
@@ -362,6 +416,12 @@ workflows:
   test-bazel7-linux:
     jobs:
       - test-bazel7-linux
+  test-bazel8-linux:
+    jobs:
+      - test-bazel8-linux
+  test-bazel9-linux:
+    jobs:
+      - test-bazel9-linux
   # https://github.com/emscripten-core/emsdk/issues/1642
   # test-bazel-latest-linux:
   #   jobs:
@@ -369,6 +429,12 @@ workflows:
   test-bazel7-mac-arm64:
     jobs:
       - test-bazel7-mac-arm64
+  test-bazel8-mac-arm64:
+    jobs:
+      - test-bazel8-mac-arm64
+  test-bazel9-mac-arm64:
+    jobs:
+      - test-bazel9-mac-arm64
   # https://github.com/emscripten-core/emsdk/issues/1642
   # test-bazel-latest-mac-arm64:
   #   jobs:
@@ -376,6 +442,12 @@ workflows:
   test-bazel7-windows:
     jobs:
       - test-bazel7-windows
+  test-bazel8-windows:
+    jobs:
+      - test-bazel8-windows
+  test-bazel9-windows:
+    jobs:
+      - test-bazel9-windows
   # https://github.com/emscripten-core/emsdk/issues/1642
   # test-bazel-latest-windows:
   #   jobs:
