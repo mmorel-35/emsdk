@@ -204,7 +204,7 @@
     },
     "@@emsdk~//:emscripten_deps.bzl%emscripten_deps": {
       "general": {
-        "bzlTransitiveDigest": "l13dpT30uo2JkUyTZcaXwreRsEt2lTQVOStOPWoZeaI=",
+        "bzlTransitiveDigest": "W3Y8lOhVBPj1RmYDJ6I5RxVpUnqyTjUHmlepg6JV34k=",
         "usagesDigest": "JNMjHXCqUsMLiBJnH4xCE/8Hjcsv9bkczErK6IcoW60=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
