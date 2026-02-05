@@ -8,6 +8,19 @@ package(default_visibility = ["//visibility:public"])
 # dlmalloc.bc is implicitly added by the emscripten toolchain
 cc_library(name = "malloc")
 
+# Hermetic Python launchers for Emscripten tools
+py_binary(
+    name = "emcc_launcher",
+    srcs = ["tool_launcher.py"],
+    main = "tool_launcher.py",
+)
+
+py_binary(
+    name = "emar_launcher",
+    srcs = ["tool_launcher.py"],
+    main = "tool_launcher.py",
+)
+
 create_toolchains(
     name = emscripten_toolchain_name("linux"),
     exec_compatible_with = [

@@ -60,7 +60,6 @@ def create_toolchains(name, repo_name, exec_compatible_with):
             "@emscripten_cache//:emscripten_config",
             "@emsdk//emscripten_toolchain:env.sh",
             "@emsdk//emscripten_toolchain:env.bat",
-            "@emsdk//emscripten_toolchain:find_python.sh",
             "@nodejs//:node_files",
         ],
     )
@@ -70,6 +69,7 @@ def create_toolchains(name, repo_name, exec_compatible_with):
         srcs = [
             "@emsdk//emscripten_toolchain:emcc.sh",
             "@emsdk//emscripten_toolchain:emcc.bat",
+            "@emsdk//emscripten_toolchain:emcc_launcher",
             repo_compiler_files_target,
             common_files_target,
         ],
@@ -91,6 +91,7 @@ def create_toolchains(name, repo_name, exec_compatible_with):
         srcs = [
             "@emsdk//emscripten_toolchain:emar.sh",
             "@emsdk//emscripten_toolchain:emar.bat",
+            "@emsdk//emscripten_toolchain:emar_launcher",
             repo_ar_files_target,
             common_files_target,
         ],
