@@ -1,4 +1,13 @@
 bazel_dep(name = "rules_cc", version = "0.2.16")
+bazel_dep(name = "rules_python", version = "1.8.3")
+
+# Test compatibility: downstream project using Python 3.12
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "3.12",
+    is_default = True,
+)
+
 bazel_dep(name = "emsdk")
 local_path_override(
     module_name = "emsdk",
