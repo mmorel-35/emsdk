@@ -133,10 +133,10 @@ def _emscripten_toolchain_impl(ctx):
             )
     
     # Build list of toolchains to register based on enabled platforms
-    toolchains_to_register = []
+    toolchain_labels = []
     for platform in enabled_platforms:
-        toolchain_label = "//emscripten_toolchain:cc-toolchain-wasm-emscripten_{}".format(platform)
-        toolchains_to_register.append(toolchain_label)
+        toolchain_label = "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_{}".format(platform)
+        toolchain_labels.append(toolchain_label)
     
     return ctx.extension_metadata(
         root_module_direct_deps = repo_names,

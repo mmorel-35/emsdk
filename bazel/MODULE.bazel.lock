@@ -234,7 +234,7 @@
     },
     "//:emscripten_toolchain.bzl%emscripten_toolchain": {
       "os:linux,arch:amd64": {
-        "bzlTransitiveDigest": "FIqq2/fFHVXgfHOKJEIz/ub5CylV0JSmbJaNBoKbUAM=",
+        "bzlTransitiveDigest": "qKHFzcEvUwIkDMu3SbAk62ppUfRVNQOjdZL5qQKzfCM=",
         "usagesDigest": "TMZ2b+bB6vEifsI3sP3VfKt0POY5egb5YvwB9hX5+ZA=",
         "recordedInputs": [
           "REPO_MAPPING:,bazel_tools bazel_tools",

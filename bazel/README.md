@@ -18,11 +18,16 @@ git_override(
 )
 ```
 
-The toolchain extension auto-detects your host platform and downloads only the necessary binaries (~100MB instead of ~500MB for all platforms).
+That's it! The toolchain:
+- Auto-detects your host platform (Linux/macOS/Windows, x86_64/ARM64)
+- Downloads only necessary binaries (~100MB instead of ~500MB)
+- Automatically registers toolchains
+
+No manual configuration needed for single-platform development.
 
 ### Advanced Configuration
 
-You can customize the Emscripten version or enable additional platforms:
+For multi-platform builds or version control:
 
 ```starlark
 # In your MODULE.bazel:
@@ -32,12 +37,30 @@ emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscr
 emscripten_toolchain.config(version = "3.1.51")
 
 # Optional: Enable additional platforms beyond your host platform
-# Using modern Bazel platform constraints (recommended):
+# Modern approach using Bazel platform constraints (recommended):
 emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+emscripten_toolchain.platform(constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"])
 
 # Or using legacy platform names (backward compatible):
 emscripten_toolchain.platform(name = "mac_arm64")
+emscripten_toolchain.platform(name = "win")
 ```
+
+### Toolchain Registration
+
+Toolchains are automatically registered in the emsdk MODULE.bazel. If you need to register them manually:
+
+```starlark
+register_toolchains(
+    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux",
+    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac",
+    # ... other platforms as needed
+)
+```
+
+The extension only creates toolchain repositories for enabled platforms, so Bazel will only use what exists.
+
+### Version Override
 
 You can use a different version of this SDK by changing it in your `MODULE.bazel` file. The Emscripten version is by default the same as the SDK version, but you can use a different one as well by adding to your `MODULE.bazel`:
 

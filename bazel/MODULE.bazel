@@ -94,14 +94,14 @@ use_repo(
 emscripten_cache = use_extension("//:emscripten_cache.bzl", "emscripten_cache")
 use_repo(emscripten_cache, "emscripten_cache")
 
-# Register toolchains for enabled platforms
-# Note: The emscripten_toolchain extension creates toolchains only for enabled platforms
-# (host platform by default + any additional platforms specified above)
-# For simplicity, we register all potential toolchains - Bazel will only use the ones that exist
+# Register Emscripten toolchains
+# The emscripten_toolchain extension auto-detects your platform and creates only
+# the necessary toolchain repositories. We register all possible toolchains here -
+# Bazel will automatically select the appropriate one based on your platform.
 register_toolchains(
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux_arm64",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac_arm64",
-    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_win",
+    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux",
+    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux_arm64",
+    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac",
+    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac_arm64",
+    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_win",
 )
