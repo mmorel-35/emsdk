@@ -1,9 +1,10 @@
-"""Legacy emscripten_toolchain extension for backward compatibility.
+"""Emscripten toolchain extension implementation with platform() and config() tags.
 
-This module provides the older API with separate platform() and config() tags.
-New code should use the unified toolchain() tag from extensions.bzl instead.
+This module implements the emscripten_toolchain extension with separate
+platform() and config() tags for maximum flexibility.
 
-Deprecated: Use emscripten = use_extension("//:extensions.bzl", "emscripten") instead.
+Alternative API: extensions.bzl provides a unified toolchain() tag that
+combines version and platform configuration in a single call.
 """
 
 load("//:emscripten_deps.bzl", "emscripten_repo_name")
@@ -27,7 +28,7 @@ _empty_repository = repository_rule(
 )
 
 def _emscripten_toolchain_impl(ctx):
-    """Implementation of the legacy emscripten_toolchain module extension.
+    """Implementation of the emscripten_toolchain module extension.
 
     This extension provides a simplified interface for Emscripten toolchain setup:
     1. Auto-detects host platform and downloads only necessary binaries
@@ -36,8 +37,6 @@ def _emscripten_toolchain_impl(ctx):
     4. Exposes all created repositories automatically
 
     Users only need minimal configuration with optional additional platforms.
-    
-    Deprecated: Use emscripten = use_extension("//:extensions.bzl", "emscripten") instead.
     """
 
     # Collect version configuration

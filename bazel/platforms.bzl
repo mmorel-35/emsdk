@@ -1,9 +1,15 @@
-"""Public API for platform utilities (backward compatibility).
+"""Public API for platform utilities.
 
-Deprecated: Internal implementation moved to private/platforms/.
-This file re-exports public symbols for backward compatibility.
+This module provides utility functions and constants for working with
+Emscripten platforms, including platform detection and configuration.
 
-For new code, prefer using the extension APIs from extensions.bzl or emscripten_toolchain.bzl.
+Exports:
+    - ALL_PLATFORMS: List of all supported platform names
+    - PLATFORM_CONFIGS: Configuration data for all platforms
+    - PLATFORM_MAPPINGS: Mapping between platform names and constraints
+    - detect_host_platform(): Auto-detect the current host platform
+    - get_platform_config(): Get configuration for a specific platform
+    - get_platform_constraints(): Get Bazel constraints for a platform
 """
 
 load("//private/platforms:config.bzl", _ALL_PLATFORMS = "ALL_PLATFORMS", _PLATFORM_CONFIGS = "PLATFORM_CONFIGS")

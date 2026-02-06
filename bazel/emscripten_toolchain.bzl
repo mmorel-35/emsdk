@@ -1,10 +1,15 @@
-"""Legacy API for Emscripten toolchain extension (backward compatibility).
+"""Emscripten toolchain extension with platform() and config() tags.
 
-Deprecated: New code should use the unified API from extensions.bzl instead:
-    emscripten = use_extension("//:extensions.bzl", "emscripten")
-    emscripten.toolchain(version = "3.1.51", platforms = ["mac_arm64"])
+This module provides the emscripten_toolchain extension with separate platform()
+and config() tags for configuring the Emscripten toolchain.
 
-This file maintains the old API for backward compatibility.
+Alternative: For a more concise API, see extensions.bzl which provides a unified
+toolchain() tag that combines version and platform configuration.
+
+Example:
+    emscripten_toolchain = use_extension("//:emscripten_toolchain.bzl", "emscripten_toolchain")
+    emscripten_toolchain.config(version = "3.1.51")
+    emscripten_toolchain.platform(name = "mac_arm64")
 """
 
 load("//private/extensions:legacy_extension.bzl", _emscripten_toolchain_extension = "emscripten_toolchain_extension")
