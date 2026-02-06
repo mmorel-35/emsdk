@@ -232,10 +232,10 @@
         }
       }
     },
-    "//:emscripten_toolchain.bzl%emscripten_toolchain": {
+    "//:extensions.bzl%emscripten": {
       "os:linux,arch:amd64": {
-        "bzlTransitiveDigest": "w3c4gL4p3CYjZWRNn670txfc3PQDeqKtKRu5NXSU7Os=",
-        "usagesDigest": "TMZ2b+bB6vEifsI3sP3VfKt0POY5egb5YvwB9hX5+ZA=",
+        "bzlTransitiveDigest": "gf5eVG713oxryOwGW10n4zNsj1vKqvlD2yXZtli1oG4=",
+        "usagesDigest": "CKZVYhNy+r0xD9yK3ZCfBdnAJIwkOdByqcv/9qzb7VI=",
         "recordedInputs": [
           "REPO_MAPPING:,bazel_tools bazel_tools",
           "REPO_MAPPING:,rules_cc rules_cc+",
@@ -263,19 +263,19 @@
             }
           },
           "emscripten_bin_linux_arm64": {
-            "repoRuleId": "@@//:emscripten_toolchain.bzl%_empty_repository",
+            "repoRuleId": "@@//:extensions.bzl%_empty_repository",
             "attributes": {}
           },
           "emscripten_bin_mac": {
-            "repoRuleId": "@@//:emscripten_toolchain.bzl%_empty_repository",
+            "repoRuleId": "@@//:extensions.bzl%_empty_repository",
             "attributes": {}
           },
           "emscripten_bin_mac_arm64": {
-            "repoRuleId": "@@//:emscripten_toolchain.bzl%_empty_repository",
+            "repoRuleId": "@@//:extensions.bzl%_empty_repository",
             "attributes": {}
           },
           "emscripten_bin_win": {
-            "repoRuleId": "@@//:emscripten_toolchain.bzl%_empty_repository",
+            "repoRuleId": "@@//:extensions.bzl%_empty_repository",
             "attributes": {}
           }
         },

@@ -31,20 +31,33 @@ For multi-platform builds or version control:
 
 ```starlark
 # In your MODULE.bazel:
-emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+emscripten = use_extension("@emsdk//:extensions.bzl", "emscripten")
 
-# Optional: Specify Emscripten version (defaults to "latest")
-emscripten_toolchain.config(version = "3.1.51")
+# Simple: Specify version with auto-detected platform
+emscripten.toolchain(version = "3.1.51")
 
-# Optional: Enable additional platforms beyond your host platform
-# Modern approach using Bazel platform constraints (recommended):
-emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
-emscripten_toolchain.platform(constraints = ["@platforms//os:windows", "@platforms//cpu:x86_64"])
+# With explicit platforms (legacy platform names):
+emscripten.toolchain(
+    version = "3.1.51",
+    platforms = ["mac_arm64", "linux"],
+)
 
-# Or using legacy platform names (backward compatible):
-emscripten_toolchain.platform(name = "mac_arm64")
-emscripten_toolchain.platform(name = "win")
+# With platform constraints (modern, explicit mapping):
+emscripten.toolchain(
+    version = "3.1.51",
+    platform_to_constraints = {
+        "mac_arm64": ["@platforms//os:macos", "@platforms//cpu:arm64"],
+        "linux": ["@platforms//os:linux", "@platforms//cpu:x86_64"],
+    },
+)
+
+# Or specify constraints and let platform name be auto-detected:
+emscripten.toolchain(
+    constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"],
+)
 ```
+
+**Note**: The old `emscripten_toolchain.platform()` and `emscripten_toolchain.config()` API still works but is deprecated. Use the unified `emscripten.toolchain()` API instead.
 
 ### Toolchain Registration
 
