@@ -101,9 +101,9 @@ use_repo(emscripten_cache, "emscripten_cache")
 # the necessary toolchain repositories. We register all possible toolchains here -
 # Bazel will automatically select the appropriate one based on your platform.
 register_toolchains(
-    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux",
-    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux_arm64",
-    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac",
-    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac_arm64",
-    "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_win",
+    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux",
+    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_linux_arm64",
+    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac",
+    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_mac_arm64",
+    "//emscripten_toolchain:cc-toolchain-wasm-emscripten_win",
 )

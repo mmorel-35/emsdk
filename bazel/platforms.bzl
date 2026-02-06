@@ -9,10 +9,8 @@ _COMMON_ARCH_ARM64 = ["aarch64", "arm64"]
 # Platform family base configurations
 _PLATFORM_FAMILIES = {
     "linux": {
-        "os": {
-            "constraint": "linux",
-            "names": ["linux"],
-        },
+        "os": "linux",
+        "os_names": ["linux"],
         "url": {
             "os": "linux",
         },
@@ -22,10 +20,8 @@ _PLATFORM_FAMILIES = {
         },
     },
     "mac": {
-        "os": {
-            "constraint": "macos",
-            "names": ["mac", "macos", "darwin"],
-        },
+        "os": "macos",
+        "os_names": ["mac", "macos", "darwin"],
         "url": {
             "os": "mac",
         },
@@ -35,10 +31,8 @@ _PLATFORM_FAMILIES = {
         },
     },
     "win": {
-        "os": {
-            "constraint": "windows",
-            "names": ["windows", "win"],
-        },
+        "os": "windows",
+        "os_names": ["windows", "win"],
         "url": {
             "os": "win",
         },
@@ -68,9 +62,9 @@ def _create_platform_config(family, cpu, arch_names, suffix = "", sha_suffix = N
 
     base = _PLATFORM_FAMILIES[family]
     return {
-        "os": base["os"]["constraint"],
+        "os": base["os"],
         "cpu": cpu,
-        "os_names": base["os"]["names"],
+        "os_names": base["os_names"],
         "arch_names": arch_names,
         "url": {
             "os": base["url"]["os"],
