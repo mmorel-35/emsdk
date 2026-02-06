@@ -1,7 +1,7 @@
 """Module extension for coordinating Emscripten platform selection and toolchain registration."""
 
 load(":emscripten_deps.bzl", "emscripten_repo_name")
-load(":platforms.bzl", "constraint_to_platform_name", "detect_host_platform", "ALL_PLATFORMS")
+load(":platforms.bzl", "constraint_to_platform_name", "detect_host_platform", "get_platform_config", "ALL_PLATFORMS")
 load(":remote_emscripten_repository.bzl", "remote_emscripten_repository")
 load(":revisions.bzl", "EMSCRIPTEN_TAGS")
 
@@ -15,6 +15,44 @@ def _empty_repository_impl(ctx):
 _empty_repository = repository_rule(
     implementation = _empty_repository_impl,
 )
+
+def _create_platform_repository(platform, repo_name, revision, emscripten_url):
+    """Create a repository for a specific platform using its configuration.
+    
+    Args:
+        platform: Platform name (e.g., "linux", "mac_arm64")
+        repo_name: Name for the repository
+        revision: Emscripten revision object with SHA attributes
+        emscripten_url: URL template for downloading binaries
+    """
+    config = get_platform_config(platform)
+    
+    # Check if this is an optional platform and SHA is available
+    if config.get("optional", False):
+        if not hasattr(revision, config["sha_attr"]):
+            _empty_repository(name = repo_name)
+            return
+    
+    # Get the SHA256 hash for this platform
+    sha256 = getattr(revision, config["sha_attr"])
+    
+    # Build the download URL using platform configuration
+    url = emscripten_url.format(
+        config["url_os"],
+        revision.hash,
+        config["url_suffix"],
+        config["archive_type"],
+    )
+    
+    # Create the repository with platform-specific settings
+    remote_emscripten_repository(
+        name = repo_name,
+        bin_extension = config["bin_extension"],
+        sha256 = sha256,
+        strip_prefix = "install",
+        type = config["archive_type"],
+        url = url,
+    )
 
 def _emscripten_toolchain_impl(ctx):
     """Implementation of the emscripten_toolchain module extension.
@@ -65,14 +103,13 @@ def _emscripten_toolchain_impl(ctx):
                 if config.name not in enabled_platforms:
                     enabled_platforms.append(config.name)
     
-    # Create emscripten_bin repositories - always create all repos for consistent use_repo
-    # But only download binaries for enabled platforms
+    # URL template for Emscripten binaries
     emscripten_url = "https://storage.googleapis.com/webassembly/emscripten-releases-builds/{}/{}/wasm-binaries{}.{}"
     
     # Repository names that will be created and exposed
     repo_names = []
     
-    # Always create all platform repositories for consistent API
+    # Create repositories for all platforms using data-driven approach
     for platform in ALL_PLATFORMS:
         repo_name = emscripten_repo_name(platform)
         repo_names.append(repo_name)
@@ -82,55 +119,8 @@ def _emscripten_toolchain_impl(ctx):
             _empty_repository(name = repo_name)
             continue
         
-        if platform == "linux":
-            remote_emscripten_repository(
-                name = repo_name,
-                bin_extension = "",
-                sha256 = revision.sha_linux,
-                strip_prefix = "install",
-                type = "tar.xz",
-                url = emscripten_url.format("linux", revision.hash, "", "tar.xz"),
-            )
-        elif platform == "linux_arm64":
-            # Not all versions have a linux/arm64 release
-            if hasattr(revision, "sha_linux_arm64"):
-                remote_emscripten_repository(
-                    name = repo_name,
-                    bin_extension = "",
-                    sha256 = revision.sha_linux_arm64,
-                    strip_prefix = "install",
-                    type = "tar.xz",
-                    url = emscripten_url.format("linux", revision.hash, "-arm64", "tar.xz"),
-                )
-            else:
-                _empty_repository(name = repo_name)
-        elif platform == "mac":
-            remote_emscripten_repository(
-                name = repo_name,
-                bin_extension = "",
-                sha256 = revision.sha_mac,
-                strip_prefix = "install",
-                type = "tar.xz",
-                url = emscripten_url.format("mac", revision.hash, "", "tar.xz"),
-            )
-        elif platform == "mac_arm64":
-            remote_emscripten_repository(
-                name = repo_name,
-                bin_extension = "",
-                sha256 = revision.sha_mac_arm64,
-                strip_prefix = "install",
-                type = "tar.xz",
-                url = emscripten_url.format("mac", revision.hash, "-arm64", "tar.xz"),
-            )
-        elif platform == "win":
-            remote_emscripten_repository(
-                name = repo_name,
-                bin_extension = ".exe",
-                sha256 = revision.sha_win,
-                strip_prefix = "install",
-                type = "zip",
-                url = emscripten_url.format("win", revision.hash, "", "zip"),
-            )
+        # Use configuration-driven repository creation
+        _create_platform_repository(platform, repo_name, revision, emscripten_url)
     
     # Build list of toolchains to register based on enabled platforms
     toolchain_labels = []
