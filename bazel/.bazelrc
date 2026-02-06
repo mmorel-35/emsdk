@@ -1,1 +1,2 @@
-build --incompatible_enable_cc_toolchain_resolution
+# The --incompatible_enable_cc_toolchain_resolution flag is no longer needed in Bazel 7+
+# as the new CC toolchain resolution is now the default behavior.
