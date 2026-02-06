@@ -124,12 +124,6 @@ def _emscripten_toolchain_impl(ctx):
         # Use configuration-driven repository creation
         _create_platform_repository(platform, repo_name, revision, emscripten_url)
 
-    # Build list of toolchains to register based on enabled platforms
-    toolchain_labels = []
-    for platform in enabled_platforms:
-        toolchain_label = "@emsdk//emscripten_toolchain:cc-toolchain-wasm-emscripten_{}".format(platform)
-        toolchain_labels.append(toolchain_label)
-
     return ctx.extension_metadata(
         root_module_direct_deps = repo_names,
         root_module_direct_dev_deps = [],
