@@ -11,10 +11,13 @@ _COMMON_ARCH_X64 = ["x86_64", "amd64"]
 _COMMON_ARCH_ARM64 = ["aarch64", "arm64"]
 
 # Platform family base configurations
+# Structure aligned with _create_platform_config output
 _PLATFORM_FAMILIES = {
     "linux": {
-        "os": "linux",
-        "os_names": ["linux"],
+        "os": {
+            "constraint": "linux",
+            "names": ["linux"],
+        },
         "url": {
             "os": "linux",
         },
@@ -24,8 +27,10 @@ _PLATFORM_FAMILIES = {
         },
     },
     "mac": {
-        "os": "macos",
-        "os_names": ["mac", "macos", "darwin"],
+        "os": {
+            "constraint": "macos",
+            "names": ["mac", "macos", "darwin"],
+        },
         "url": {
             "os": "mac",
         },
@@ -35,8 +40,10 @@ _PLATFORM_FAMILIES = {
         },
     },
     "win": {
-        "os": "windows",
-        "os_names": ["windows", "win"],
+        "os": {
+            "constraint": "windows",
+            "names": ["windows", "win"],
+        },
         "url": {
             "os": "win",
         },
@@ -67,8 +74,8 @@ def _create_platform_config(family, cpu, arch_names, suffix = "", sha_suffix = N
     base = _PLATFORM_FAMILIES[family]
     return {
         "os": {
-            "constraint": base["os"],
-            "names": base["os_names"],
+            "constraint": base["os"]["constraint"],
+            "names": base["os"]["names"],
         },
         "cpu": {
             "constraint": cpu,
