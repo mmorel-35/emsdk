@@ -1,64 +1,75 @@
 """Centralized platform definitions and utilities for Emscripten toolchain."""
 
-# Platform configuration structure - all platform-specific metadata in one place
-# This makes it easy to add new platforms or modify existing ones
-PLATFORM_CONFIGS = {
+# Common configuration values to reduce duplication (DRY principle)
+_COMMON_UNIX_ARCHIVE = "tar.xz"
+_COMMON_UNIX_BIN_EXT = ""
+_COMMON_ARCH_X64 = ["x86_64", "amd64"]
+_COMMON_ARCH_ARM64 = ["aarch64", "arm64"]
+
+# Platform family base configurations
+_PLATFORM_FAMILIES = {
     "linux": {
         "os": "linux",
-        "cpu": "x86_64",
-        "os_names": ["linux"],  # Possible values from ctx.os.name
-        "arch_names": ["x86_64", "amd64"],  # Possible values from ctx.os.arch
-        "url_os": "linux",
-        "url_suffix": "",
-        "archive_type": "tar.xz",
-        "bin_extension": "",
-        "sha_attr": "sha_linux",
-    },
-    "linux_arm64": {
-        "os": "linux",
-        "cpu": "arm64",
         "os_names": ["linux"],
-        "arch_names": ["aarch64", "arm64"],
         "url_os": "linux",
-        "url_suffix": "-arm64",
-        "archive_type": "tar.xz",
-        "bin_extension": "",
-        "sha_attr": "sha_linux_arm64",
-        "optional": True,  # Not all versions have this platform
+        "archive_type": _COMMON_UNIX_ARCHIVE,
+        "bin_extension": _COMMON_UNIX_BIN_EXT,
     },
     "mac": {
         "os": "macos",
-        "cpu": "x86_64",
         "os_names": ["mac", "macos", "darwin"],
-        "arch_names": ["x86_64", "amd64"],
         "url_os": "mac",
-        "url_suffix": "",
-        "archive_type": "tar.xz",
-        "bin_extension": "",
-        "sha_attr": "sha_mac",
-    },
-    "mac_arm64": {
-        "os": "macos",
-        "cpu": "arm64",
-        "os_names": ["mac", "macos", "darwin"],
-        "arch_names": ["aarch64", "arm64"],
-        "url_os": "mac",
-        "url_suffix": "-arm64",
-        "archive_type": "tar.xz",
-        "bin_extension": "",
-        "sha_attr": "sha_mac_arm64",
+        "archive_type": _COMMON_UNIX_ARCHIVE,
+        "bin_extension": _COMMON_UNIX_BIN_EXT,
     },
     "win": {
         "os": "windows",
-        "cpu": "x86_64",
         "os_names": ["windows", "win"],
-        "arch_names": ["x86_64", "amd64"],
         "url_os": "win",
-        "url_suffix": "",
         "archive_type": "zip",
         "bin_extension": ".exe",
-        "sha_attr": "sha_win",
     },
+}
+
+def _create_platform_config(family, cpu, arch_names, suffix = "", sha_suffix = None, optional = False):
+    """Create a platform configuration by merging family defaults with specific values.
+
+    Args:
+        family: Platform family name (linux, mac, win)
+        cpu: CPU architecture (x86_64, arm64)
+        arch_names: List of possible architecture names from ctx.os.arch
+        suffix: URL suffix for this variant (e.g., "-arm64")
+        sha_suffix: Suffix for SHA attribute name (defaults to suffix without hyphen)
+        optional: Whether this platform is optional for some versions
+
+    Returns:
+        Complete platform configuration dictionary
+    """
+    if sha_suffix == None:
+        sha_suffix = suffix.replace("-", "_")
+
+    base = _PLATFORM_FAMILIES[family]
+    return {
+        "os": base["os"],
+        "cpu": cpu,
+        "os_names": base["os_names"],
+        "arch_names": arch_names,
+        "url_os": base["url_os"],
+        "url_suffix": suffix,
+        "archive_type": base["archive_type"],
+        "bin_extension": base["bin_extension"],
+        "sha_attr": "sha_{}{}".format(family, sha_suffix),
+        "optional": optional,
+    }
+
+# Platform configuration structure - all platform-specific metadata in one place
+# Using DRY principle with helper function to reduce duplication
+PLATFORM_CONFIGS = {
+    "linux": _create_platform_config("linux", "x86_64", _COMMON_ARCH_X64),
+    "linux_arm64": _create_platform_config("linux", "arm64", _COMMON_ARCH_ARM64, "-arm64", optional = True),
+    "mac": _create_platform_config("mac", "x86_64", _COMMON_ARCH_X64),
+    "mac_arm64": _create_platform_config("mac", "arm64", _COMMON_ARCH_ARM64, "-arm64"),
+    "win": _create_platform_config("win", "x86_64", _COMMON_ARCH_X64),
 }
 
 # Build platform mappings from configs
@@ -80,52 +91,57 @@ ALL_PLATFORMS = list(PLATFORM_CONFIGS.keys())
 
 def constraint_to_platform_name(constraints):
     """Convert platform constraints to internal platform name.
-    
+
     Args:
         constraints: List of Bazel platform constraint strings
-        
+
     Returns:
         Internal platform name string
-        
+
     Raises:
         fail() if constraints are invalid or unsupported
     """
     os_constraint = None
     cpu_constraint = None
-    
+
     for constraint in constraints:
         if constraint.startswith("@platforms//os:"):
             os_constraint = constraint[len("@platforms//os:"):]
         elif constraint.startswith("@platforms//cpu:"):
             cpu_constraint = constraint[len("@platforms//cpu:"):]
-    
+
     if not os_constraint or not cpu_constraint:
         fail("Platform must specify both OS and CPU constraints. Got: {}".format(constraints))
-    
+
     platform_key = (os_constraint, cpu_constraint)
     if platform_key not in PLATFORM_MAPPINGS:
         supported = ["{}/{}".format(os, cpu) for os, cpu in PLATFORM_MAPPINGS.keys()]
         fail("Unsupported platform combination: {}/{}. Supported: {}".format(
-            os_constraint, cpu_constraint, ", ".join(supported)))
-    
+            os_constraint,
+            cpu_constraint,
+            ", ".join(supported),
+        ))
+
     return PLATFORM_MAPPINGS[platform_key]
 
 def platform_name_to_constraints(platform_name):
     """Convert internal platform name to Bazel constraints.
-    
+
     Args:
         platform_name: Internal platform name
-        
+
     Returns:
         List of constraint strings
-        
+
     Raises:
         fail() if platform_name is not supported
     """
     if platform_name not in PLATFORM_CONFIGS:
         fail("Unknown platform name: {}. Supported: {}".format(
-            platform_name, ", ".join(ALL_PLATFORMS)))
-    
+            platform_name,
+            ", ".join(ALL_PLATFORMS),
+        ))
+
     config = PLATFORM_CONFIGS[platform_name]
     return [
         "@platforms//os:{}".format(config["os"]),
@@ -134,17 +150,18 @@ def platform_name_to_constraints(platform_name):
 
 def detect_host_platform(ctx):
     """Detect the host platform based on Bazel's os and arch information.
-    
+
     Args:
         ctx: Repository or module extension context
-        
+
     Returns:
         Internal platform name for the detected host
     """
+
     # Normalize OS and architecture names
     os_name = ctx.os.name.lower()
     arch_name = ctx.os.arch.lower()
-    
+
     # Find matching platform by checking os_names and arch_names
     for platform_name, config in PLATFORM_CONFIGS.items():
         # Check if OS matches any of the known OS names for this platform
@@ -153,30 +170,32 @@ def detect_host_platform(ctx):
             if os_name.startswith(name):
                 os_match = True
                 break
-        
+
         # Check if architecture matches any of the known arch names for this platform
         arch_match = arch_name in config["arch_names"]
-        
+
         if os_match and arch_match:
             return platform_name
-    
+
     # Fallback to linux x86_64 for unknown platforms
     return "linux"
 
 def get_platform_config(platform_name):
     """Get the configuration for a specific platform.
-    
+
     Args:
         platform_name: Internal platform name
-        
+
     Returns:
         Dictionary with platform configuration
-        
+
     Raises:
         fail() if platform_name is not supported
     """
     if platform_name not in PLATFORM_CONFIGS:
         fail("Unknown platform name: {}. Supported: {}".format(
-            platform_name, ", ".join(ALL_PLATFORMS)))
-    
+            platform_name,
+            ", ".join(ALL_PLATFORMS),
+        ))
+
     return PLATFORM_CONFIGS[platform_name]

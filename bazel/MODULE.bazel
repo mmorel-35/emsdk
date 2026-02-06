@@ -50,32 +50,34 @@ npm = use_extension(
     "npm",
 )
 
-# Default NPM translation for Linux (most common development platform)
-# The emscripten_toolchain extension auto-detects the host platform, so this should
-# work out of the box for Linux development. For other platforms, uncomment the
-# corresponding translation below and add the platform to emscripten_toolchain.
+# NPM translations for Emscripten platforms
+# Only Linux is enabled by default. To add more platforms:
+# 1. Uncomment the npm.npm_translate_lock() call below
+# 2. Add the repository name to use_repo()
+# 3. Optionally add the platform to emscripten_toolchain above
+
+# Linux (enabled by default)
 npm.npm_translate_lock(
     name = "emscripten_npm_linux",
     data = ["@emscripten_bin_linux//:emscripten/package.json"],
     npm_package_lock = "@emscripten_bin_linux//:emscripten/package-lock.json",
 )
 
-# Uncomment and configure NPM translations for additional platforms as needed:
-# For macOS development:
+# Uncomment for macOS x86_64:
 # npm.npm_translate_lock(
 #     name = "emscripten_npm_mac",
 #     data = ["@emscripten_bin_mac//:emscripten/package.json"],
 #     npm_package_lock = "@emscripten_bin_mac//:emscripten/package-lock.json",
 # )
 
-# For macOS ARM64 development:
+# Uncomment for macOS ARM64:
 # npm.npm_translate_lock(
 #     name = "emscripten_npm_mac_arm64",
 #     data = ["@emscripten_bin_mac_arm64//:emscripten/package.json"],
 #     npm_package_lock = "@emscripten_bin_mac_arm64//:emscripten/package-lock.json",
 # )
 
-# For Windows development:
+# Uncomment for Windows:
 # npm.npm_translate_lock(
 #     name = "emscripten_npm_win",
 #     data = ["@emscripten_bin_win//:emscripten/package.json"],
@@ -85,9 +87,9 @@ npm.npm_translate_lock(
 use_repo(
     npm,
     "emscripten_npm_linux",
-    # Uncomment additional repositories as needed:
+    # Add additional repositories as you uncomment them above:
     # "emscripten_npm_mac",
-    # "emscripten_npm_mac_arm64", 
+    # "emscripten_npm_mac_arm64",
     # "emscripten_npm_win",
 )
 
