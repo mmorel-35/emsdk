@@ -4,6 +4,8 @@
 
 Support for depending on emsdk with a WORKSPACE file was removed and last available in [emsdk version 4.0.6](https://github.com/emscripten-core/emsdk/tree/24fc909c0da13ef641d5ae75e89b5a97f25e37aa). Now we only support inclusion as a bzlmod module.
 
+### Basic Setup (Recommended)
+
 In your `MODULE.bazel` file, put:
 ```starlark
 emsdk_version = "4.0.6"
@@ -16,9 +18,30 @@ git_override(
 )
 ```
 
+The toolchain extension auto-detects your host platform and downloads only the necessary binaries (~100MB instead of ~500MB for all platforms).
+
+### Advanced Configuration
+
+You can customize the Emscripten version or enable additional platforms:
+
+```starlark
+# In your MODULE.bazel:
+emscripten_toolchain = use_extension("@emsdk//:emscripten_toolchain.bzl", "emscripten_toolchain")
+
+# Optional: Specify Emscripten version (defaults to "latest")
+emscripten_toolchain.config(version = "3.1.51")
+
+# Optional: Enable additional platforms beyond your host platform
+# Using modern Bazel platform constraints (recommended):
+emscripten_toolchain.platform(constraints = ["@platforms//os:macos", "@platforms//cpu:arm64"])
+
+# Or using legacy platform names (backward compatible):
+emscripten_toolchain.platform(name = "mac_arm64")
+```
+
 You can use a different version of this SDK by changing it in your `MODULE.bazel` file. The Emscripten version is by default the same as the SDK version, but you can use a different one as well by adding to your `MODULE.bazel`:
 
-```
+```starlark
 emscripten_deps = use_extension(
     "@emsdk//:emscripten_deps.bzl",
     "emscripten_deps",
