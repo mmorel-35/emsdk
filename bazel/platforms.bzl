@@ -62,10 +62,14 @@ def _create_platform_config(family, cpu, arch_names, suffix = "", sha_suffix = N
 
     base = _PLATFORM_FAMILIES[family]
     return {
-        "os": base["os"],
-        "cpu": cpu,
-        "os_names": base["os_names"],
-        "arch_names": arch_names,
+        "os": {
+            "constraint": base["os"],
+            "names": base["os_names"],
+        },
+        "cpu": {
+            "constraint": cpu,
+            "names": arch_names,
+        },
         "url": {
             "os": base["url"]["os"],
             "suffix": suffix,
@@ -93,7 +97,7 @@ def _build_platform_mappings():
     """Build platform mappings from configuration."""
     mappings = {}
     for name, config in PLATFORM_CONFIGS.items():
-        mappings[(config["os"], config["cpu"])] = name
+        mappings[(config["os"]["constraint"], config["cpu"]["constraint"])] = name
     return mappings
 
 # Standard platform mappings between Bazel constraints and internal platform names
@@ -160,8 +164,8 @@ def platform_name_to_constraints(platform_name):
 
     config = PLATFORM_CONFIGS[platform_name]
     return [
-        "@platforms//os:{}".format(config["os"]),
-        "@platforms//cpu:{}".format(config["cpu"]),
+        "@platforms//os:{}".format(config["os"]["constraint"]),
+        "@platforms//cpu:{}".format(config["cpu"]["constraint"]),
     ]
 
 def detect_host_platform(ctx):
@@ -182,13 +186,13 @@ def detect_host_platform(ctx):
     for platform_name, config in PLATFORM_CONFIGS.items():
         # Check if OS matches any of the known OS names for this platform
         os_match = False
-        for name in config["os_names"]:
+        for name in config["os"]["names"]:
             if os_name.startswith(name):
                 os_match = True
                 break
 
         # Check if architecture matches any of the known arch names for this platform
-        arch_match = arch_name in config["arch_names"]
+        arch_match = arch_name in config["cpu"]["names"]
 
         if os_match and arch_match:
             return platform_name
