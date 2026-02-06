@@ -28,13 +28,7 @@ emscripten_deps.config(version = "4.0.1")
 
 ## Building
 
-Put the following line into your `.bazelrc`:
-
-```
-build --incompatible_enable_cc_toolchain_resolution
-```
-
-Then write a new rule wrapping your `cc_binary`.
+Write a new rule wrapping your `cc_binary`.
 
 ```starlark
 load("@rules_cc//cc:defs.bzl", "cc_binary")
