@@ -38,19 +38,19 @@ def _create_platform_repository(platform, repo_name, revision, emscripten_url):
 
     # Build the download URL using platform configuration
     url = emscripten_url.format(
-        config["url_os"],
+        config["url"]["os"],
         revision.hash,
-        config["url_suffix"],
-        config["archive_type"],
+        config["url"]["suffix"],
+        config["archive"]["type"],
     )
 
     # Create the repository with platform-specific settings
     remote_emscripten_repository(
         name = repo_name,
-        bin_extension = config["bin_extension"],
+        bin_extension = config["archive"]["bin_extension"],
         sha256 = sha256,
         strip_prefix = "install",
-        type = config["archive_type"],
+        type = config["archive"]["type"],
         url = url,
     )
 

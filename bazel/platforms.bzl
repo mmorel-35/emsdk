@@ -9,25 +9,43 @@ _COMMON_ARCH_ARM64 = ["aarch64", "arm64"]
 # Platform family base configurations
 _PLATFORM_FAMILIES = {
     "linux": {
-        "os": "linux",
-        "os_names": ["linux"],
-        "url_os": "linux",
-        "archive_type": _COMMON_UNIX_ARCHIVE,
-        "bin_extension": _COMMON_UNIX_BIN_EXT,
+        "os": {
+            "constraint": "linux",
+            "names": ["linux"],
+        },
+        "url": {
+            "os": "linux",
+        },
+        "archive": {
+            "type": _COMMON_UNIX_ARCHIVE,
+            "bin_extension": _COMMON_UNIX_BIN_EXT,
+        },
     },
     "mac": {
-        "os": "macos",
-        "os_names": ["mac", "macos", "darwin"],
-        "url_os": "mac",
-        "archive_type": _COMMON_UNIX_ARCHIVE,
-        "bin_extension": _COMMON_UNIX_BIN_EXT,
+        "os": {
+            "constraint": "macos",
+            "names": ["mac", "macos", "darwin"],
+        },
+        "url": {
+            "os": "mac",
+        },
+        "archive": {
+            "type": _COMMON_UNIX_ARCHIVE,
+            "bin_extension": _COMMON_UNIX_BIN_EXT,
+        },
     },
     "win": {
-        "os": "windows",
-        "os_names": ["windows", "win"],
-        "url_os": "win",
-        "archive_type": "zip",
-        "bin_extension": ".exe",
+        "os": {
+            "constraint": "windows",
+            "names": ["windows", "win"],
+        },
+        "url": {
+            "os": "win",
+        },
+        "archive": {
+            "type": "zip",
+            "bin_extension": ".exe",
+        },
     },
 }
 
@@ -50,14 +68,18 @@ def _create_platform_config(family, cpu, arch_names, suffix = "", sha_suffix = N
 
     base = _PLATFORM_FAMILIES[family]
     return {
-        "os": base["os"],
+        "os": base["os"]["constraint"],
         "cpu": cpu,
-        "os_names": base["os_names"],
+        "os_names": base["os"]["names"],
         "arch_names": arch_names,
-        "url_os": base["url_os"],
-        "url_suffix": suffix,
-        "archive_type": base["archive_type"],
-        "bin_extension": base["bin_extension"],
+        "url": {
+            "os": base["url"]["os"],
+            "suffix": suffix,
+        },
+        "archive": {
+            "type": base["archive"]["type"],
+            "bin_extension": base["archive"]["bin_extension"],
+        },
         "sha_attr": "sha_{}{}".format(family, sha_suffix),
         "optional": optional,
     }
