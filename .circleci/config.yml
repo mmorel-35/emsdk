@@ -93,14 +93,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-lint-deps-{{ arch }}-{{ checksum "requirements-dev.txt" }}
+            - v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
       - run:
           name: install python deps
           command: |
             python3 -m pip install --upgrade pip
-            python3 -m pip install -r requirements-dev.txt
+            python3 -m pip install -r .circleci/requirements-dev.txt
       - save_cache:
-          key: v1-lint-deps-{{ arch }}-{{ checksum "requirements-dev.txt" }}
+          key: v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
           paths:
             - ~/.cache/pip
       - run:
