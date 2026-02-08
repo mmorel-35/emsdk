@@ -91,16 +91,22 @@ jobs:
     executor: ubuntu
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - v1-lint-deps-{{ checksum "pyproject.toml" }}
+            - v1-lint-deps-
       - run:
           name: install python deps
           command: |
-            apt-get update -q
-            apt-get install -q -y python3-pip
+            python3 -m pip install --upgrade pip
+            python3 -m pip install flake8==7.1.1 ruff==0.14.1
+      - save_cache:
+          key: v1-lint-deps-{{ checksum "pyproject.toml" }}
+          paths:
+            - ~/.cache/pip
       - run:
           name: python lint
           command: |
-            python3 -m pip install --upgrade pip
-            python3 -m pip install flake8==7.1.1 ruff==0.14.1
             python3 -m flake8 --show-source --statistics --extend-exclude=./scripts
             python3 -m ruff check
   test-linux:
@@ -308,27 +314,20 @@ workflows:
   # Main CI pipeline - runs on all commits
   main:
     jobs:
-      # Linting runs first as a fast quality check
+      # Linting runs independently - can fail without blocking other jobs
       - lint
       
-      # Regular tests run in parallel after linting
-      - test-linux:
-          requires:
-            - lint
-      - test-linux-arm64:
-          requires:
-            - lint
-      - test-mac-arm64:
-          requires:
-            - lint
-      - test-windows:
-          requires:
-            - lint
+      # Regular tests run in parallel (no dependency on lint)
+      - test-linux
+      - test-linux-arm64
+      - test-mac-arm64
+      - test-windows
       
-      # Bazel tests run in parallel with regular tests (grouped by platform with version matrix)
+      # Docker build runs as part of CI
+      - build-docker-image-x64
+      
+      # Bazel tests run in parallel (grouped by platform with version matrix)
       - test-bazel-linux:
-          requires:
-            - lint
           matrix:
             parameters:
               bazel_version: 
@@ -337,8 +336,6 @@ workflows:
               # https://github.com/emscripten-core/emsdk/issues/1642
               # - "9.x"
       - test-bazel-mac-arm64:
-          requires:
-            - lint
           matrix:
             parameters:
               bazel_version: 
@@ -347,8 +344,6 @@ workflows:
               # https://github.com/emscripten-core/emsdk/issues/1642
               # - "9.x"
       - test-bazel-windows:
-          requires:
-            - lint
           matrix:
             parameters:
               # For some reason version resolution with "x.x" does not work on Windows,
