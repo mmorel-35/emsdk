@@ -93,14 +93,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-lint-deps-{{ arch }}-0c2c4589
+            - v1-lint-deps-{{ arch }}-{{ checksum "requirements-dev.txt" }}
       - run:
           name: install python deps
           command: |
             python3 -m pip install --upgrade pip
-            python3 -m pip install flake8==7.1.1 ruff==0.14.1
+            python3 -m pip install -r requirements-dev.txt
       - save_cache:
-          key: v1-lint-deps-{{ arch }}-7.1.1-0.14.1
+          key: v1-lint-deps-{{ arch }}-{{ checksum "requirements-dev.txt" }}
           paths:
             - ~/.cache/pip
       - run:
