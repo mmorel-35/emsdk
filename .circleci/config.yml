@@ -93,15 +93,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-lint-deps-{{ checksum "pyproject.toml" }}
-            - v1-lint-deps-
+            - v1-lint-deps-flake8-7.1.1-ruff-0.14.1
       - run:
           name: install python deps
           command: |
             python3 -m pip install --upgrade pip
             python3 -m pip install flake8==7.1.1 ruff==0.14.1
       - save_cache:
-          key: v1-lint-deps-{{ checksum "pyproject.toml" }}
+          key: v1-lint-deps-flake8-7.1.1-ruff-0.14.1
           paths:
             - ~/.cache/pip
       - run:
