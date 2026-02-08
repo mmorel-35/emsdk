@@ -310,16 +310,14 @@ jobs:
       - test-bazel-windows
 
 workflows:
-  # Main CI pipeline - runs on all commits
-  main:
+  # Lint workflow - runs independently
+  lint:
     jobs:
-      # Linting runs independently - can fail without blocking other jobs
       - lint
-      
-      # Docker build runs as part of CI
-      - build-docker-image-x64
-      
-      # Linux tests (grouped by platform)
+  
+  # Linux tests workflow
+  test-linux:
+    jobs:
       - test-linux
       - test-linux-arm64
       - test-bazel-linux:
@@ -330,8 +328,10 @@ workflows:
                 - "8.x"
               # https://github.com/emscripten-core/emsdk/issues/1642
               # - "9.x"
-      
-      # macOS tests (grouped by platform)
+  
+  # macOS tests workflow
+  test-macos:
+    jobs:
       - test-mac-arm64
       - test-bazel-mac-arm64:
           matrix:
@@ -341,8 +341,10 @@ workflows:
                 - "8.x"
               # https://github.com/emscripten-core/emsdk/issues/1642
               # - "9.x"
-      
-      # Windows tests (grouped by platform)
+  
+  # Windows tests workflow
+  test-windows:
+    jobs:
       - test-windows
       - test-bazel-windows:
           matrix:
