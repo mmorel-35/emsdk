@@ -316,16 +316,12 @@ workflows:
       # Linting runs independently - can fail without blocking other jobs
       - lint
       
-      # Regular tests run in parallel (no dependency on lint)
-      - test-linux
-      - test-linux-arm64
-      - test-mac-arm64
-      - test-windows
-      
       # Docker build runs as part of CI
       - build-docker-image-x64
       
-      # Bazel tests run in parallel (grouped by platform with version matrix)
+      # Linux tests (grouped by platform)
+      - test-linux
+      - test-linux-arm64
       - test-bazel-linux:
           matrix:
             parameters:
@@ -334,6 +330,9 @@ workflows:
                 - "8.x"
               # https://github.com/emscripten-core/emsdk/issues/1642
               # - "9.x"
+      
+      # macOS tests (grouped by platform)
+      - test-mac-arm64
       - test-bazel-mac-arm64:
           matrix:
             parameters:
@@ -342,6 +341,9 @@ workflows:
                 - "8.x"
               # https://github.com/emscripten-core/emsdk/issues/1642
               # - "9.x"
+      
+      # Windows tests (grouped by platform)
+      - test-windows
       - test-bazel-windows:
           matrix:
             parameters:
