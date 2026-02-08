@@ -93,14 +93,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-lint-deps-flake8-7.1.1-ruff-0.14.1
+            - v1-lint-deps-{{ arch }}-0c2c4589
       - run:
           name: install python deps
           command: |
             python3 -m pip install --upgrade pip
             python3 -m pip install flake8==7.1.1 ruff==0.14.1
       - save_cache:
-          key: v1-lint-deps-flake8-7.1.1-ruff-0.14.1
+          key: v1-lint-deps-{{ arch }}-0c2c4589
           paths:
             - ~/.cache/pip
       - run:
