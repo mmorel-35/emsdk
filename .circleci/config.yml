@@ -112,7 +112,6 @@ jobs:
           key: v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
           paths:
             - ~/.cache/pip
-            - /usr/local/lib
       - run:
           name: python lint
           command: |
