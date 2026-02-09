@@ -93,7 +93,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v2-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
+            - v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
       - run:
           name: install python deps
           command: |
@@ -109,11 +109,10 @@ jobs:
               python3 -m pip install -r .circleci/requirements-dev.txt
             fi
       - save_cache:
-          key: v2-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
+          key: v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
           paths:
-            # Cache the site-packages directory where pip installs packages
-            # This path is for Python 3.10 in buildpack-deps:jammy executor
-            - /usr/local/lib/python3.10/dist-packages
+            # Cache the site-packages directory (version-agnostic glob pattern)
+            - /usr/local/lib/python*/dist-packages
       - run:
           name: python lint
           command: |
