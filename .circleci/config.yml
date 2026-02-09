@@ -111,8 +111,12 @@ jobs:
       - save_cache:
           key: v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
           paths:
-            # Cache the site-packages directory (version-agnostic glob pattern)
-            - /usr/local/lib/python*/dist-packages
+            - ~/.cache/pip
+            - /usr/local/lib/python3.8/dist-packages
+            - /usr/local/lib/python3.9/dist-packages
+            - /usr/local/lib/python3.10/dist-packages
+            - /usr/local/lib/python3.11/dist-packages
+            - /usr/local/lib/python3.12/dist-packages
       - run:
           name: python lint
           command: |
