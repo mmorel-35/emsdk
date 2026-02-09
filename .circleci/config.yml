@@ -93,18 +93,24 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
+            - v2-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
       - run:
           name: install python deps
           command: |
-            apt-get update -q
-            apt-get install -q -y python3-pip
-            python3 -m pip install --upgrade pip
-            python3 -m pip install -r .circleci/requirements-dev.txt
+            # Check if packages are already installed from cache
+            if python3 -m flake8 --version && python3 -m ruff --version; then
+              echo "Packages already installed from cache, skipping pip install"
+            else
+              echo "Installing packages"
+              apt-get update -q
+              apt-get install -q -y python3-pip
+              python3 -m pip install --upgrade pip
+              python3 -m pip install -r .circleci/requirements-dev.txt
+            fi
       - save_cache:
-          key: v1-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
+          key: v2-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
           paths:
-            - ~/.cache/pip
+            - /usr/local/lib/python3.10/dist-packages
       - run:
           name: python lint
           command: |
