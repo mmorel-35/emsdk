@@ -98,9 +98,7 @@ jobs:
           name: install python deps
           command: |
             # Check if packages are already installed from cache
-            # Note: Path matches Python 3.10 in buildpack-deps:jammy executor
-            if [ -d /usr/local/lib/python3.10/dist-packages ] && \
-               python3 -m flake8 --version >/dev/null 2>&1 && \
+            if python3 -m flake8 --version >/dev/null 2>&1 && \
                python3 -m ruff --version >/dev/null 2>&1; then
               echo "Packages already installed from cache, skipping pip install"
             else
@@ -113,8 +111,8 @@ jobs:
       - save_cache:
           key: v2-lint-deps-{{ arch }}-{{ checksum ".circleci/requirements-dev.txt" }}
           paths:
-            # Note: This path is specific to Python 3.10 in buildpack-deps:jammy
-            # If the executor image is upgraded, update this path accordingly
+            # Cache the site-packages directory where pip installs packages
+            # This path is for Python 3.10 in buildpack-deps:jammy executor
             - /usr/local/lib/python3.10/dist-packages
       - run:
           name: python lint
